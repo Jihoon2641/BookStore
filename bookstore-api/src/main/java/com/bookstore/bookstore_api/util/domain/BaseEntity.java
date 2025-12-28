@@ -1,4 +1,4 @@
-package com.bookstore.bookstore_api.domain.entity;
+package com.bookstore.bookstore_api.util.domain;
 
 import java.time.LocalDateTime;
 

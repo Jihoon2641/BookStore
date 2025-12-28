@@ -1,6 +1,6 @@
-package com.bookstore.bookstore_api.domain.entity.user;
+package com.bookstore.bookstore_api.user.domain.entity;
 
-import com.bookstore.bookstore_api.domain.entity.BaseEntity;
+import com.bookstore.bookstore_api.util.domain.BaseEntity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
