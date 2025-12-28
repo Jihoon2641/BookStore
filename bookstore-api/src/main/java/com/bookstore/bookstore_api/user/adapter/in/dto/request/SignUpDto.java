@@ -1,4 +1,4 @@
-package com.bookstore.bookstore_api.user.adapter.in.dto;
+package com.bookstore.bookstore_api.user.adapter.in.dto.request;
 
 import jakarta.validation.constraints.*;
 
