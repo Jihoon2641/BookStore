@@ -1,4 +1,4 @@
-package com.bookstore.bookstore_api.domain.model.user;
+package com.bookstore.bookstore_api.user.domain.model;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
