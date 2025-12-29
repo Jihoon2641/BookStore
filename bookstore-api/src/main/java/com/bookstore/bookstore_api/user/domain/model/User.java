@@ -9,7 +9,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public class User {
 
-    private static final String EMAIL_REGEX = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";
+    private static final String EMAIL_REGEX = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
     private static final String PASSWORD_REGEX = "^(?=.*[a-zA-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$";
 
     @Schema(description = "사용자 ID")
@@ -90,7 +90,7 @@ public class User {
             throw new IllegalArgumentException("사용자 비밀번호는 필수입니다.");
         }
 
-        if (password.length() < 8 && password.length() > 15) {
+        if (password.length() < 8 || password.length() > 15) {
             throw new IllegalArgumentException("사용자 비밀번호는 8자 이상 15자 이하여야 합니다.");
         }
     

@@ -1,5 +1,6 @@
 package com.bookstore.bookstore_api.user.adapter.in.web;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -13,6 +14,7 @@ import com.bookstore.bookstore_api.user.application.port.in.LogInCommand;
 import com.bookstore.bookstore_api.user.application.port.in.SignUpCommand;
 import com.bookstore.bookstore_api.user.application.port.in.UserAccountUseCase;
 import com.bookstore.bookstore_api.user.domain.model.User;
+import com.bookstore.bookstore_api.util.response.ApiResponse;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -39,7 +41,7 @@ public class UserAccountController {
             user.getEmail()
         );
 
-        return ResponseEntity.ok(responseDto);
+        return ResponseEntity.ok(ApiResponse.success(responseDto, "회원가입 성공", HttpStatus.OK));
     }
 
     @PostMapping("/login")
@@ -56,7 +58,7 @@ public class UserAccountController {
             user.getEmail()
         );
 
-        return ResponseEntity.ok(responseDto);
+        return ResponseEntity.ok(ApiResponse.success(responseDto, "로그인 성공", HttpStatus.OK));
     }
     
 }
