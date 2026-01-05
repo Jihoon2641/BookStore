@@ -38,3 +38,7 @@ out/
 
 ### DsStore ###
 .DS_Store
+
+### Pem Files ###
+*.pem
+*.key
