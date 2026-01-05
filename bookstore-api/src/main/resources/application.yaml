@@ -3,4 +3,17 @@ spring:
     name: bookstore-api
 
   datasource:
-  
+    url: jdbc:mysql://localhost:3306/bookstore
+    username: bookstore
+    password: 1234
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+    open-in-view: false
