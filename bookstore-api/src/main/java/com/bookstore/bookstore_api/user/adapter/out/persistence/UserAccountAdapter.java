@@ -30,9 +30,8 @@ public class UserAccountAdapter implements UserAccountRepository {
 
     @Override
     public User findByEmail(String email) {
-
-        UserEntity userEntity = userAccountJpaRepository.findByEmail(email)
-            .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
-        return userMapper.toModel(userEntity);
+        return userAccountJpaRepository.findByEmail(email)
+            .map(userMapper::toModel)
+            .orElse(null);
     }
 }

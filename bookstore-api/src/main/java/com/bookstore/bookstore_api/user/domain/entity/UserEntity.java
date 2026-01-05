@@ -3,12 +3,16 @@ package com.bookstore.bookstore_api.user.domain.entity;
 import com.bookstore.bookstore_api.util.domain.BaseEntity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "users")
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Getter
 public class UserEntity extends BaseEntity{
 
