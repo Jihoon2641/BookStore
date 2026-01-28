@@ -16,7 +16,6 @@ public class Orders {
 
     @Schema(description = "주문 ID")
     private Long id;
-    // 다른 엔티티 참조 금지
     @Schema(description = "사용자 ID")
     private Long userId;
     @Schema(description = "주문 날짜")
