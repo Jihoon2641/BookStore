@@ -22,16 +22,14 @@ public class Book {
     private String isbn;
     @Schema(description = "도서 가격")
     private Long price;
+    @Schema(description = "도서 재고")
+    private Long stock;
     @Schema(description = "도서 이미지 URL")
     private String imageUrl;
     @Schema(description = "도서 설명")
     private String description;
     @Schema(description = "도서 출판일")
     private LocalDateTime publishedDate;
-    @Schema(description = "도서 생성일")
-    private LocalDateTime createdAt;
-    @Schema(description = "도서 수정일")
-    private LocalDateTime updatedAt;
 
     /**
      * 신규 도서 생성
@@ -39,6 +37,7 @@ public class Book {
      * @param author 도서 저자
      * @param publisher 도서 출판사
      * @param isbn 도서 ISBN
+     * @param stock 도서 재고
      * @param price 도서 가격
      * @param imageUrl 도서 이미지 URL
      * @param description 도서 설명
@@ -46,17 +45,18 @@ public class Book {
      * @return 신규 도서 정보
      */
     public static Book create(String title, String author, String publisher, 
-        String isbn, Long price, String imageUrl, String description, LocalDateTime publishedDate) {
+        String isbn, Long stock, Long price, String imageUrl, String description, LocalDateTime publishedDate) {
             validateTitle(title);
             validateAuthor(author);
             validatePublisher(publisher);
             validateIsbn(isbn);
+            validateStock(stock);
             validatePrice(price);
             validateImageUrl(imageUrl);
             validateDescription(description);
             validatePublishedDate(publishedDate);
 
-            return new Book(null, title, author, publisher, isbn, price, imageUrl, description, publishedDate, LocalDateTime.now(), LocalDateTime.now());
+            return new Book(null, title, author, publisher, isbn, stock,price, imageUrl, description, publishedDate);
         }
 
     /* =============== 검증 메서드 =============== */
@@ -138,6 +138,16 @@ public class Book {
     private static void validatePublishedDate(LocalDateTime publishedDate) {
         if (publishedDate == null) {
             throw new IllegalArgumentException("도서 출판일은 필수입니다.");
+        }
+    }
+
+    /**
+     * 도서 재고 유효성 검사
+     * @param stock 도서 재고
+     */
+    private static void validateStock(Long stock) {
+        if (stock == null || stock < 0) {
+            throw new IllegalArgumentException("도서 재고는 필수이며 0 이상이어야 합니다.");
         }
     }
 }

@@ -12,13 +12,15 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import com.bookstore.bookstore_api.util.domain.BaseEntity;
+
 @Entity
 @Table(name = "books")
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @Getter
-public class BookEntity {
+public class BookEntity extends BaseEntity {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
@@ -30,6 +32,7 @@ public class BookEntity {
     private String isbn;
 
     private Long price;
+    private Long stock;
     private String imageUrl;
 
     @Column(columnDefinition = "TEXT")
@@ -37,10 +40,5 @@ public class BookEntity {
 
     @Column(name = "published_date")
     private LocalDateTime publishedDate;
-    
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
 
 }
