@@ -20,6 +20,6 @@ spring:
 
 mybatis:
   mapper-locations: classpath:mapper/*.xml
-  type-aliases-package: com.bookstore.bookstore_api.user.domain.model
+  type-aliases-package: com.bookstore.bookstore_api.user.domain.entity
   configuration:
     map-underscore-to-camel-case: true
