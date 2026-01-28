@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import com.bookstore.bookstore_api.order.domain.entity.OrderItemEntity;
+import com.bookstore.bookstore_api.order.domain.entity.OrderStatus;
 
 @Schema(description = "주문 정보")
 @Getter
@@ -23,7 +24,7 @@ public class Orders {
     @Schema(description = "주문 항목")
     private List<OrderItemEntity> orderItems;
     @Schema(description = "주문 상태")
-    private String status;
+    private OrderStatus status;
 
     /**
      * 신규 주문 생성
@@ -33,7 +34,7 @@ public class Orders {
      * @param status 주문 상태
      * @return 신규 주문 정보
      */
-    public static Orders create(Long userId, LocalDateTime orderDate, List<OrderItemEntity> orderItems, String status) {
+    public static Orders create(Long userId, LocalDateTime orderDate, List<OrderItemEntity> orderItems, OrderStatus status) {
         validateUserId(userId);
         validateOrderItems(orderItems);
 

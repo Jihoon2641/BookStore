@@ -8,12 +8,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Column;
 
-import com.bookstore.bookstore_api.product.domain.entity.BookEntity;
 import com.bookstore.bookstore_api.util.domain.BaseEntity;
 
 @Entity
@@ -27,15 +24,16 @@ public class OrderItemEntity extends BaseEntity {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id", nullable = false)
-    private OrdersEntity order;
+    @Column(name = "order_id", nullable = false)
+    private Long orderId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "book_id", nullable = false)
-    private BookEntity book;
+    @Column(name = "book_id", nullable = false)
+    private Long bookId;
 
+    @Column(name = "quantity", nullable = false)
     private Long quantity;
+
+    @Column(name = "price", nullable = false)
     private Long price;
 
 }

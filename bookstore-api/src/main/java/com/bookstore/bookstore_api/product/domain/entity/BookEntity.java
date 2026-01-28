@@ -21,18 +21,29 @@ import com.bookstore.bookstore_api.util.domain.BaseEntity;
 @Builder
 @Getter
 public class BookEntity extends BaseEntity {
+    
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "title", nullable = false)
     private String title;
+
+    @Column(name = "author", nullable = false)
     private String author;
+
+    @Column(name = "publisher", nullable = false)
     private String publisher;
 
-    @Column(unique = true)
+    @Column(name = "isbn", unique = true, nullable = false)
     private String isbn;
 
+    @Column(name = "price", nullable = false)
     private Long price;
+
+    @Column(name = "stock", nullable = false)
     private Long stock;
+
+    @Column(name = "image_url", nullable = false)
     private String imageUrl;
 
     @Column(columnDefinition = "TEXT")
