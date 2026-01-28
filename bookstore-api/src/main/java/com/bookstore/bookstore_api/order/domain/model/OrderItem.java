@@ -64,8 +64,8 @@ public class OrderItem {
      * @param quantity 주문 수량
      */
     private static void validateQuantity(Long quantity) {
-        if (quantity == null || quantity < 0) {
-            throw new IllegalArgumentException("주문 수량은 필수입니다.");
+        if (quantity == null || quantity < 1) {
+            throw new IllegalArgumentException("주문 수량은 필수이며, 1 이상이어야 합니다.");
         }
     }
 
@@ -75,7 +75,7 @@ public class OrderItem {
      */
     private static void validatePrice(Long price) {
         if (price == null || price < 0) {
-            throw new IllegalArgumentException("주문 가격은 필수입니다.");
+            throw new IllegalArgumentException("주문 가격은 필수이며, 0원 이상이어야 합니다.");
         }
     }
 }

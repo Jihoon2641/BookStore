@@ -6,7 +6,6 @@ import lombok.Getter;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.bookstore.bookstore_api.order.domain.entity.OrderItemEntity;
 import com.bookstore.bookstore_api.order.domain.entity.OrderStatus;
 
 @Schema(description = "주문 정보")
@@ -21,7 +20,7 @@ public class Orders {
     @Schema(description = "주문 날짜")
     private LocalDateTime orderDate;
     @Schema(description = "주문 항목")
-    private List<OrderItemEntity> orderItems;
+    private List<OrderItem> orderItems;
     @Schema(description = "주문 상태")
     private OrderStatus status;
 
@@ -33,7 +32,7 @@ public class Orders {
      * @param status 주문 상태
      * @return 신규 주문 정보
      */
-    public static Orders create(Long userId, LocalDateTime orderDate, List<OrderItemEntity> orderItems, OrderStatus status) {
+    public static Orders create(Long userId, LocalDateTime orderDate, List<OrderItem> orderItems, OrderStatus status) {
         validateUserId(userId);
         validateOrderItems(orderItems);
 
@@ -55,7 +54,7 @@ public class Orders {
     /**
      * 주문 항목 유효성 검사
      */
-    private static void validateOrderItems(List<OrderItemEntity> orderItems) {
+    private static void validateOrderItems(List<OrderItem> orderItems) {
         if (orderItems == null || orderItems.isEmpty()) {
             throw new IllegalArgumentException("주문 항목은 필수입니다.");
         }

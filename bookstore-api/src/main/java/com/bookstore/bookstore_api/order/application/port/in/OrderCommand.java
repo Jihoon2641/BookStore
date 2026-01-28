@@ -8,7 +8,6 @@ import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.bookstore.bookstore_api.order.domain.entity.OrderItemEntity;
 import com.bookstore.bookstore_api.order.domain.entity.OrderStatus;
 
 @Getter
@@ -21,12 +20,12 @@ public class OrderCommand extends SelfValidating<OrderCommand> {
     private final LocalDateTime orderDate;
 
     @NotBlank(message = "주문 항목은 필수 입력 항목입니다.")
-    private final List<OrderItemEntity> orderItems;
+    private final List<OrderItemCommand> orderItems;
 
     @NotBlank(message = "주문 상태는 필수 입력 항목입니다.")
     private final OrderStatus status;
 
-    public OrderCommand(Long userId, LocalDateTime orderDate, List<OrderItemEntity> orderItems, OrderStatus status) {
+    public OrderCommand(Long userId, LocalDateTime orderDate, List<OrderItemCommand> orderItems, OrderStatus status) {
         this.userId = userId;
         this.orderDate = orderDate;
         this.orderItems = orderItems;
