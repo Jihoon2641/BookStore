@@ -48,7 +48,7 @@ public class OrderService implements OrderUseCase {
                 .map(OrderItemCommand::getProductId)
                 .toList();
 
-            Optional<List<Book>> products = productRepository.findAllByIds(productIds);
+            Optional<List<Book>> products = productRepository.findAllByIdsWithLock(productIds);
 
             if (products.isPresent() && !products.get().isEmpty()) {
                 throw new RuntimeException("상품이 존재하지 않습니다.");

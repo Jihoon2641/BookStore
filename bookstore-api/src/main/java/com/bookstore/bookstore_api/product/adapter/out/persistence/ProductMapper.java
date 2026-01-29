@@ -13,7 +13,7 @@ public interface ProductMapper {
 
     BookEntity findById(@Param("id") Long id);
 
-    List<BookEntity> findAllByIds(@Param("ids") List<Long> ids);
+    List<BookEntity> findAllByIdsWithLock(@Param("ids") List<Long> ids);
 
     int updateStock(@Param("stockDecreaseCommands") List<StockDecreaseCommand> stockDecreaseCommands);
 }

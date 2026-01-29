@@ -9,6 +9,6 @@ import com.bookstore.bookstore_api.product.adapter.in.StockDecreaseCommand;
 public interface ProductRepository {
 
     Optional<Book> findById(Long id);
-    Optional<List<Book>> findAllByIds(List<Long> ids);
+    Optional<List<Book>> findAllByIdsWithLock(List<Long> ids);
     int updateStock(List<StockDecreaseCommand> stockDecreaseCommands);
 }

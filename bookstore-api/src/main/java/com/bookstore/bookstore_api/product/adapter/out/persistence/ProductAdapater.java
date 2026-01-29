@@ -23,8 +23,8 @@ public class ProductAdapater implements ProductRepository{
     }
 
     @Override
-    public Optional<List<Book>> findAllByIds(List<Long> ids) {
-        List<BookEntity> entities = productMapper.findAllByIds(ids);
+    public Optional<List<Book>> findAllByIdsWithLock(List<Long> ids) {
+        List<BookEntity> entities = productMapper.findAllByIdsWithLock(ids);
         
         if (entities == null || entities.isEmpty()) {
             return Optional.empty();
