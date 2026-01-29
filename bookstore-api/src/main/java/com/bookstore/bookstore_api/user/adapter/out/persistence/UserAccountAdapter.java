@@ -13,7 +13,7 @@ import lombok.RequiredArgsConstructor;
 public class UserAccountAdapter implements UserAccountRepository {
 
     private final UserAccountJpaRepository userAccountJpaRepository;
-    private final UserMapper userMapper;
+    private final UserConverter userMapper;
 
     @Override
     public User save(User user) {

@@ -13,7 +13,7 @@ import java.util.Optional;
 public class UserAccountAdapterMybatis implements UserAccountRepository {
 
     private final UserAccountMapper userAccountMapper;
-    private final UserMapper userMapper;
+    private final UserConverter userMapper;
 
     @Override
     public User save(User user) {

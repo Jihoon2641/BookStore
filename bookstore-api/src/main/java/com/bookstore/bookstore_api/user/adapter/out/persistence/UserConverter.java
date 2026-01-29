@@ -9,7 +9,7 @@ import com.bookstore.bookstore_api.user.domain.model.User;
  * 사용자 엔티티와 모델 간의 변환을 담당하는 매퍼
  */
 @Mapper(componentModel = "spring")
-public interface UserMapper {
+public interface UserConverter {
 
     /**
      * User 모델을 UserEntity 엔티티로 변환
