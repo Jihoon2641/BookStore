@@ -48,10 +48,4 @@ public class OrderLogEntity extends BaseEntity {
     @Column(name = "failure_reason", length = 500)
     private String failureReason;
 
-    @Column(name = "ip_address", length = 50)
-    private String ipAddress;
-
-    @Column(name = "description", length = 500)
-    private String description;
-
 }

@@ -5,7 +5,8 @@ public enum OrderStatus {
     CONFIRMED("확정", "주문이 확정되었습니다."),
     SHIPPED("배송중", "상품이 배송중입니다."),
     DELIVERED("배송완료", "상품이 배송완료되었습니다."),
-    CANCELLED("취소", "주문이 취소되었습니다.");
+    CANCELLED("취소", "주문이 취소되었습니다."),
+    FAILED("실패", "주문이 실패하였습니다.");
 
     private final String name;
     private final String description;
