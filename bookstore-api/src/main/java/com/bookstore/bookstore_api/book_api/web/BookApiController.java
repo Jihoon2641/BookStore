@@ -22,8 +22,8 @@ public class BookApiController {
     public ResponseEntity<ApiResponse<String>> searchBooks(@RequestBody BookSearchRequest request) {
         String keyword = request.title();
 
-        String result = bookSearchService.searchBooks(keyword);
+        int result = bookSearchService.searchBooksAndSave(keyword);
 
-        return ResponseEntity.ok(ApiResponse.success(result, "성공", HttpStatus.OK));
+        return ResponseEntity.ok(ApiResponse.success(String.valueOf(result), "성공", HttpStatus.OK));
     }
 }

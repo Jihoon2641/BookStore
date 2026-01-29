@@ -16,4 +16,6 @@ public interface ProductMapper {
     List<BookEntity> findAllByIdsWithLock(@Param("ids") List<Long> ids);
 
     int updateStock(@Param("stockDecreaseCommands") List<StockDecreaseCommand> stockDecreaseCommands);
+
+    int saveAll(@Param("books") List<BookEntity> books);
 }

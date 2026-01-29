@@ -54,7 +54,7 @@ public class Book {
             validatePrice(price);
             validateImageUrl(imageUrl);
 
-            return new Book(null, title, author, publisher, isbn, stock,price, imageUrl, description, publishedDate);
+            return new Book(null, title, author, publisher, isbn, price, stock, imageUrl, description, publishedDate);
         }
 
     /* =============== 검증 메서드 =============== */
