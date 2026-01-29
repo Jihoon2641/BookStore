@@ -53,8 +53,6 @@ public class Book {
             validateStock(stock);
             validatePrice(price);
             validateImageUrl(imageUrl);
-            validateDescription(description);
-            validatePublishedDate(publishedDate);
 
             return new Book(null, title, author, publisher, isbn, stock,price, imageUrl, description, publishedDate);
         }
@@ -99,6 +97,10 @@ public class Book {
         if (isbn == null || isbn.isBlank()) {
             throw new IllegalArgumentException("도서 ISBN은 필수입니다.");
         }
+
+        if (isbn.length() != 10 && isbn.length() != 13) {
+            throw new IllegalArgumentException("도서 ISBN은 10자 또는 13자여야 합니다.");
+        }
     }
 
     /**
@@ -118,26 +120,6 @@ public class Book {
     private static void validateImageUrl(String imageUrl) {
         if (imageUrl == null || imageUrl.isBlank()) {
             throw new IllegalArgumentException("도서 이미지 URL은 필수입니다.");
-        }
-    }
-
-    /**
-     * 도서 설명 유효성 검사
-     * @param description 도서 설명
-     */
-    private static void validateDescription(String description) {
-        if (description == null || description.isBlank()) {
-            throw new IllegalArgumentException("도서 설명은 필수입니다.");
-        }
-    }
-
-    /**
-     * 도서 출판일 유효성 검사
-     * @param publishedDate 도서 출판일
-     */
-    private static void validatePublishedDate(LocalDateTime publishedDate) {
-        if (publishedDate == null) {
-            throw new IllegalArgumentException("도서 출판일은 필수입니다.");
         }
     }
 
