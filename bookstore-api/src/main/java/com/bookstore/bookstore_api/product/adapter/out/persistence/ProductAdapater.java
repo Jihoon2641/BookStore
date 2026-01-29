@@ -43,4 +43,8 @@ public class ProductAdapater implements ProductRepository {
         return productMapper.updateStock(stockDecreaseCommands);
     }
 
+    @Override
+    public int saveAll(List<BookEntity> books) {
+        return productMapper.saveAll(books);
+    }
 }

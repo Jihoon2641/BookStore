@@ -42,3 +42,7 @@ out/
 ### Pem Files ###
 *.pem
 *.key
+
+### Application Properties ###
+bookstore-api/src/main/resources/application.yaml
+bookstore-api/src/test/resources/application.yaml

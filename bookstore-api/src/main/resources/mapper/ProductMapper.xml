@@ -23,4 +23,19 @@
         </foreach>
     </update>
 
+    <insert id="saveAll" parameterType="list">
+        INSERT IGNORE INTO books (
+            title, author, publisher, isbn, 
+            price,   stock,   image_url, description, published_date, created_at, updated_at 
+        )
+        VALUES
+        <foreach collection="books" item="item" separator=",">
+            (
+                #{item.title}, #{item.author}, #{item.publisher}, #{item.isbn}, 
+                #{item.price}, #{item.stock}, #{item.imageUrl}, #{item.description}, #{item.publishedDate},
+                NOW(), NOW()
+            )
+        </foreach>
+    </insert>
+
 </mapper>
