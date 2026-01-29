@@ -12,7 +12,6 @@ import com.bookstore.bookstore_api.order.domain.model.Orders;
 import jakarta.transaction.Transactional;
 
 import com.bookstore.bookstore_api.order.application.port.in.OrderCommand;
-import com.bookstore.bookstore_api.product.adapter.in.BookCommand;
 import com.bookstore.bookstore_api.product.adapter.in.StockDecreaseCommand;
 import com.bookstore.bookstore_api.product.application.port.out.ProductRepository;
 import com.bookstore.bookstore_api.order.application.port.in.OrderItemCommand;
