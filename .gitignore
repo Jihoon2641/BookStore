@@ -44,4 +44,4 @@ out/
 *.key
 
 ### Application Properties ###
-./bookstore-api/src/main/resources/application.yaml
+bookstore-api/src/main/resources/application.yaml
