@@ -7,13 +7,15 @@
         INSERT INTO orders (
             user_id, 
             order_date, 
-            order_items, 
-            status
+            status,
+            created_at,
+            updated_at
         ) VALUES (
             #{userId}, 
             #{orderDate}, 
-            #{orderItems}, 
-            #{status}
+            #{status},
+            NOW(),
+            NOW()
         )
     </insert>
 

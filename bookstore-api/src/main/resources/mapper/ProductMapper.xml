@@ -9,17 +9,23 @@
 
     <select id="findAllByIdsWithLock" resultType="BookEntity">
         SELECT * FROM books WHERE id IN
-        <foreach collection="ids" item="id" open="()" separator="," close=")">
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
             #{id}
         </foreach>
         FOR UPDATE
     </select>
     
     <update id="updateStock" parameterType="list">
-        <foreach collection="list" item="item" separator=";">
-            UPDATE books
-            SET stock = stock - #{item.quantity}
-            WHERE id = #{item.productId}
+        UPDATE books
+        SET stock = CASE
+            <foreach collection="stockDecreaseCommands" item="item">
+                WHEN id = #{item.productId} THEN stock - #{item.quantity}
+            </foreach>
+            ELSE stock
+        END
+        WHERE id IN
+        <foreach collection="stockDecreaseCommands" item="item" open="(" separator="," close=")">
+            #{item.productId}
         </foreach>
     </update>
 

@@ -11,7 +11,8 @@
             current_status,
             result,
             failure_reason,
-            created_at
+            created_at,
+            updated_at
         ) VALUES (
             #{orderId},
             #{userId},
@@ -19,6 +20,7 @@
             #{currentStatus},
             #{result},
             #{failureReason},
+            NOW(),
             NOW()
         )
     </insert>

@@ -10,6 +10,7 @@ public interface OrderLogConverter {
 
     /**
      * OrderLog 모델을 OrderLogEntity 엔티티로 변환
+     * 
      * @param orderLog OrderLog 모델
      * @return OrderLogEntity 엔티티
      */
@@ -17,6 +18,7 @@ public interface OrderLogConverter {
 
     /**
      * OrderLogEntity 엔티티를 OrderLog 모델로 변환
+     * 
      * @param orderLogEntity OrderLogEntity 엔티티
      * @return OrderLog 모델
      */
