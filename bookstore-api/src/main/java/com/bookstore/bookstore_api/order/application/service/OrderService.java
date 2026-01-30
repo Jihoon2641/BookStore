@@ -16,11 +16,13 @@ import com.bookstore.bookstore_api.order.domain.entity.OrderResult;
 
 import org.springframework.transaction.annotation.Transactional;
 
+import com.bookstore.bookstore_api.order.application.event.object.OrderLogEvent;
 import com.bookstore.bookstore_api.order.application.port.in.OrderCommand;
 import com.bookstore.bookstore_api.product.adapter.in.StockDecreaseCommand;
 import com.bookstore.bookstore_api.product.application.port.out.ProductRepository;
 import com.bookstore.bookstore_api.order.application.port.in.OrderItemCommand;
 import com.bookstore.bookstore_api.product.domain.model.Book;
+import org.springframework.context.ApplicationEventPublisher;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +39,7 @@ public class OrderService implements OrderUseCase {
     private final OrderItemRepository orderItemRepository;
     private final OrderLogRepository orderLogRepository;
     private final ProductRepository productRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -99,7 +102,7 @@ public class OrderService implements OrderUseCase {
             // OrderItem 저장
             orderItemRepository.saveAll(orderItems);
 
-            // 로그 저장
+            // 로그 저장 -> selfValidate 검증
             OrderLog orderLog = OrderLog.create(
                     savedOrder.getId(),
                     savedOrder.getUserId(),
@@ -108,15 +111,29 @@ public class OrderService implements OrderUseCase {
                     OrderResult.SUCCESS,
                     null);
 
-            orderLogRepository.save(orderLog);
+            // 이벤트 객체 생성
+            OrderLogEvent orderLogEvent = OrderLogEvent.success(
+                    orderLog.getOrderId(),
+                    orderLog.getUserId(),
+                    orderLog.getPreviousStatus(),
+                    orderLog.getCurrentStatus(),
+                    orderLog.getResult(),
+                    orderLog.getFailureReason());
+
+            // 이벤트 발행
+            eventPublisher.publishEvent(orderLogEvent);
 
             return savedOrder;
 
         } catch (Exception e) {
-            OrderLog orderLog = OrderLog.createFailure(
+
+            // 실패 이벤트 객체 생성
+            OrderLogEvent orderLogEvent = OrderLogEvent.failure(
                     orderCommand.getUserId(),
                     e.getMessage());
-            orderLogRepository.save(orderLog);
+
+            // 이벤트 발행
+            eventPublisher.publishEvent(orderLogEvent);
 
             throw new RuntimeException("주문 생성에 실패하였습니다. " + e.getMessage());
         }
