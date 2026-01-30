@@ -28,24 +28,27 @@ public class OrderLog {
 
     /**
      * 신규 주문 로그 생성
-     * @param orderId 주문 ID
-     * @param userId 사용자 ID
+     * 
+     * @param orderId        주문 ID
+     * @param userId         사용자 ID
      * @param previousStatus 이전 주문 상태
-     * @param currentStatus 현재 주문 상태
-     * @param result 주문 결과
-     * @param failureReason 실패 이유
-     * @param description 설명
+     * @param currentStatus  현재 주문 상태
+     * @param result         주문 결과
+     * @param failureReason  실패 이유
+     * @param description    설명
      * @return 신규 주문 로그 정보
      */
-    public static OrderLog create(Long orderId, Long userId, OrderStatus previousStatus, OrderStatus currentStatus, OrderResult result, String failureReason) {
+    public static OrderLog create(Long orderId, Long userId, OrderStatus previousStatus, OrderStatus currentStatus,
+            OrderResult result, String failureReason) {
         validateOrderId(orderId);
         validateUserId(userId);
         return new OrderLog(null, orderId, userId, previousStatus, currentStatus, result, failureReason);
     }
 
     /**
-     * 주문 실패 로그 생성 
-     * @param userId 사용자 ID
+     * 주문 실패 로그 생성
+     * 
+     * @param userId        사용자 ID
      * @param failureReason 실패 이유
      * @return 실패 주문 로그 정보
      */
@@ -58,6 +61,7 @@ public class OrderLog {
 
     /**
      * 주문 ID 유효성 검사
+     * 
      * @param orderId 주문 ID
      */
     private static void validateOrderId(Long orderId) {
@@ -68,6 +72,7 @@ public class OrderLog {
 
     /**
      * 사용자 ID 유효성 검사
+     * 
      * @param userId 사용자 ID
      */
     private static void validateUserId(Long userId) {
@@ -75,6 +80,5 @@ public class OrderLog {
             throw new IllegalArgumentException("사용자 ID는 필수입니다.");
         }
     }
-
 
 }

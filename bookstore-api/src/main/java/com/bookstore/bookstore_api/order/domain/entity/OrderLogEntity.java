@@ -27,7 +27,7 @@ public class OrderLogEntity extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "order_id", nullable = false)
+    @Column(name = "order_id")
     private Long orderId;
 
     @Column(name = "user_id", nullable = false)
@@ -45,7 +45,7 @@ public class OrderLogEntity extends BaseEntity {
     @Column(name = "result", nullable = false, length = 10)
     private OrderResult result;
 
-    @Column(name = "failure_reason", length = 500)
+    @Column(name = "failure_reason", columnDefinition = "TEXT")
     private String failureReason;
 
 }

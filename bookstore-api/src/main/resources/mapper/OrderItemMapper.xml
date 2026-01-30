@@ -4,10 +4,10 @@
 <mapper namespace="com.bookstore.bookstore_api.order.adapter.out.persistence.OrderItemMapper">
 
     <insert id="saveAll" parameterType="list">
-        INSERT INTO order_items (order_id, book_id, quantity, price, created_at)
+        INSERT INTO order_items (order_id, book_id, quantity, price, created_at, updated_at)
         VALUES
         <foreach collection="orderItems" item="item" separator=",">
-            (#{item.orderId}, #{item.bookId}, #{item.quantity}, #{item.price}, NOW())
+            (#{item.orderId}, #{item.bookId}, #{item.quantity}, #{item.price}, NOW(), NOW())
         </foreach>
     </insert>
 
