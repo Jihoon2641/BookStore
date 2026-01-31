@@ -18,4 +18,6 @@ public interface ProductMapper {
     int updateStock(@Param("stockDecreaseCommands") List<StockDecreaseCommand> stockDecreaseCommands);
 
     int saveAll(@Param("books") List<BookEntity> books);
+
+    int syncPopularStatus();
 }
