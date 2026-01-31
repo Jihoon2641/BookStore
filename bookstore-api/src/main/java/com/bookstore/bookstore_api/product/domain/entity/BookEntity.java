@@ -21,8 +21,9 @@ import com.bookstore.bookstore_api.util.domain.BaseEntity;
 @Builder
 @Getter
 public class BookEntity extends BaseEntity {
-    
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "title", nullable = false)
@@ -51,5 +52,8 @@ public class BookEntity extends BaseEntity {
 
     @Column(name = "published_date")
     private LocalDateTime publishedDate;
+
+    @Column(name = "is_popular", nullable = false, columnDefinition = "BOOLEAN DEFAULT false")
+    private Boolean isPopular;
 
 }

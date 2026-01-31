@@ -31,7 +31,8 @@ public class BookSearchService {
     private final ProductRepository productRepository;
     private final ProductConverter productConverter;
 
-    public BookSearchService(WebClient naverWebClient, ProductRepository productRepository, ProductConverter productConverter) {
+    public BookSearchService(WebClient naverWebClient, ProductRepository productRepository,
+            ProductConverter productConverter) {
         this.naverWebClient = naverWebClient;
         this.productRepository = productRepository;
         this.productConverter = productConverter;
@@ -41,38 +42,39 @@ public class BookSearchService {
 
         /* Naver API 호출 */
         NaverBookResponse response = naverWebClient.get()
-            .uri(uriBuilder -> uriBuilder
-                .path("/v1/search/book.json")
-                .queryParam("query", title)
-                .queryParam("display", 100)
-                .build())
-            .header("X-Naver-Client-Id", clientId)
-            .header("X-Naver-Client-Secret", clientSecret)
-            .retrieve()
-            .bodyToMono(NaverBookResponse.class)
-            .block();
-        
+                .uri(uriBuilder -> uriBuilder
+                        .path("/v1/search/book.json")
+                        .queryParam("query", title)
+                        .queryParam("display", 100)
+                        .build())
+                .header("X-Naver-Client-Id", clientId)
+                .header("X-Naver-Client-Secret", clientSecret)
+                .retrieve()
+                .bodyToMono(NaverBookResponse.class)
+                .block();
+
         /* 도서 정보 저장 */
         if (response != null && response.getItems() != null) {
             List<BookEntity> entities = response.getItems().stream()
-                .map(item -> {
-                    Long price = parsePrice(item.getDiscount());
-                    LocalDateTime publishedDate = parsePublishedDate(item.getPubdate());
-                    
-                    Book book = Book.create(
-                        item.getTitle(), 
-                        item.getAuthor(), 
-                        item.getPublisher(), 
-                        item.getIsbn(), 
-                        DEFAULT_STOCK,
-                        price, 
-                        item.getImage(), 
-                        item.getDescription(), 
-                        publishedDate);
-                    
-                    return productConverter.toEntity(book);
-                })
-                .toList();
+                    .map(item -> {
+                        Long price = parsePrice(item.getDiscount());
+                        LocalDateTime publishedDate = parsePublishedDate(item.getPubdate());
+
+                        Book book = Book.create(
+                                item.getTitle(),
+                                item.getAuthor(),
+                                item.getPublisher(),
+                                item.getIsbn(),
+                                DEFAULT_STOCK,
+                                price,
+                                item.getImage(),
+                                item.getDescription(),
+                                publishedDate,
+                                false);
+
+                        return productConverter.toEntity(book);
+                    })
+                    .toList();
 
             int result = productRepository.saveAll(entities);
             return result;
@@ -88,7 +90,7 @@ public class BookSearchService {
         return discount.longValue();
     }
 
-    /* 출판일이 null일 경우 null로 설정 및 String -> LocalDateTime 변환  */
+    /* 출판일이 null일 경우 null로 설정 및 String -> LocalDateTime 변환 */
     private LocalDateTime parsePublishedDate(String pubdate) {
         if (pubdate == null || pubdate.isBlank()) {
             return null;

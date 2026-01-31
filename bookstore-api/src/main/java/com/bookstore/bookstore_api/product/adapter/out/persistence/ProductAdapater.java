@@ -47,4 +47,9 @@ public class ProductAdapater implements ProductRepository {
     public int saveAll(List<BookEntity> books) {
         return productMapper.saveAll(books);
     }
+
+    @Override
+    public int syncPopularStatus() {
+        return productMapper.syncPopularStatus();
+    }
 }
