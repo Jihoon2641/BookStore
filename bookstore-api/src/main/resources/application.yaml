@@ -23,11 +23,15 @@ spring:
 
 mybatis:
   mapper-locations: classpath:mapper/*.xml
-  type-aliases-package: com.bookstore.bookstore_api.user.domain.entity,com.bookstore.bookstore_api.order.domain.entity,com.bookstore.bookstore_api.product.domain.entity,com.bookstore.bookstore_api.log.domain.entity
+  type-aliases-package: com.bookstore.bookstore_api.user.domain.entity,com.bookstore.bookstore_api.order.domain.entity,com.bookstore.bookstore_api.product.domain.entity,com.bookstore.bookstore_api.log.domain.entity,com.bookstore.bookstore_api.admin.domain.entity
   configuration:
     map-underscore-to-camel-case: true
 
 naver:
   api:
-    client-id: ${NAVER_API_CLIENT_ID}
-    client-secret: ${NAVER_API_CLIENT_SECRET}
+    client-id: ${NAVER_CLIENT_ID}
+    client-secret: ${NAVER_CLIENT_SECRET}
+
+jwt:
+  secret: VlwEyVlPKZ6yV9yVlwEyVlPKZ6yV9yVlwEyVlPKZ6yV9yVlwEyVlPKZ6yV9y 
+  expiration: 3600000 # 1시간 (밀리초 단위)

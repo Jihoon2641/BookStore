@@ -8,20 +8,29 @@
             id, 
             name, 
             email, 
-            password
-        FROM user_accounts 
+            password,
+            role_id,
+            created_at,
+            updated_at
+        FROM users 
         WHERE email = #{email}
     </select>
 
     <insert id="save" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO user_accounts (
+        INSERT INTO users (
             name, 
             email, 
-            password
+            password,
+            role_id,
+            created_at,
+            updated_at
         ) VALUES (
             #{name}, 
             #{email}, 
-            #{password}
+            #{password},
+            #{roleId},
+            NOW(),
+            NOW()
         )
     </insert>
 

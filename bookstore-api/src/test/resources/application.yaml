@@ -24,3 +24,7 @@ naver:
   api:
     client-id: asdf1234
     client-secret: asdf1234
+
+jwt:
+  secret: VlwEyVlPKZ6yV9yVlwEyVlPKZ6yV9yVlwEyVlPKZ6yV9yVlwEyVlPKZ6yV9y
+  expiration: 3600000
