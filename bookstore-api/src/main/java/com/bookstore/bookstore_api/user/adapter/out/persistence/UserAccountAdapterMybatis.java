@@ -1,5 +1,7 @@
 package com.bookstore.bookstore_api.user.adapter.out.persistence;
 
+import org.springframework.stereotype.Component;
+
 import com.bookstore.bookstore_api.user.application.port.out.UserAccountRepository;
 import com.bookstore.bookstore_api.user.domain.entity.UserEntity;
 import com.bookstore.bookstore_api.user.domain.model.User;
@@ -8,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.Optional;
 
-
+@Component
 @RequiredArgsConstructor
 public class UserAccountAdapterMybatis implements UserAccountRepository {
 
@@ -29,7 +31,7 @@ public class UserAccountAdapterMybatis implements UserAccountRepository {
             throw new RuntimeException("사용자 저장에 실패하였습니다.");
         }
 
-        return userMapper.toModel(userEntity);  
+        return userMapper.toModel(userEntity);
     }
 
     @Override

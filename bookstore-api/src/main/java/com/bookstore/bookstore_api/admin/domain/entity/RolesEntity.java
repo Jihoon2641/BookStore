@@ -8,12 +8,14 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import com.bookstore.bookstore_api.util.domain.BaseEntity;
 
 @Entity
 @Table(name = "roles")
+@Getter
 @NoArgsConstructor
 public class RolesEntity extends BaseEntity {
 
