@@ -13,6 +13,10 @@ public interface ProductRepository {
 
     Optional<List<Book>> findAllByIdsWithLock(List<Long> ids);
 
+    Optional<List<Book>> findAllByIds(List<Long> ids);
+
+    Optional<Book> findByIdWithLock(Long id);
+
     int updateStock(List<StockDecreaseCommand> stockDecreaseCommands);
 
     int saveAll(List<BookEntity> books);

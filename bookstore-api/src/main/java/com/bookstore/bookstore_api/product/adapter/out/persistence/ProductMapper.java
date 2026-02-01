@@ -15,6 +15,10 @@ public interface ProductMapper {
 
     List<BookEntity> findAllByIdsWithLock(@Param("ids") List<Long> ids);
 
+    List<BookEntity> findAllByIds(@Param("ids") List<Long> ids);
+
+    BookEntity findByIdWithLock(@Param("id") Long id);
+
     int updateStock(@Param("stockDecreaseCommands") List<StockDecreaseCommand> stockDecreaseCommands);
 
     int saveAll(@Param("books") List<BookEntity> books);

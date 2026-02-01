@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+import com.bookstore.bookstore_api.order.application.service.OrderDeadlockService;
 import com.bookstore.bookstore_api.order.adapter.in.OrderRequest;
 import com.bookstore.bookstore_api.order.adapter.in.OrderRequestMapper;
 import com.bookstore.bookstore_api.order.application.port.in.OrderCommand;
@@ -26,13 +27,22 @@ import com.bookstore.bookstore_api.util.response.ApiResponse;
 public class OrderController {
 
     private final OrderUseCase orderUseCase;
+    private final OrderDeadlockService orderDeadlockService;
     private final OrderRequestMapper orderRequestMapper;
 
-    @Operation(summary = "주문 생성", description = "새로운 주문을 생성합니다.")
+    @Operation(summary = "주문 생성", description = "새로운 주문을 생성")
     @PostMapping
     public ResponseEntity<ApiResponse<Orders>> createOrder(@Valid @RequestBody OrderRequest request) {
         OrderCommand command = orderRequestMapper.toCommand(request);
         Orders savedOrder = orderUseCase.createOrder(command);
+        return ResponseEntity.ok(ApiResponse.success(savedOrder, HttpStatus.CREATED));
+    }
+
+    @Operation(summary = "데드락 유발 주문 생성", description = "인덱스가 없는 타이틀로 락을 걸어서 데드락을 유발")
+    @PostMapping("/deadlock")
+    public ResponseEntity<ApiResponse<Orders>> createOrderWithDeadlock(@Valid @RequestBody OrderRequest request) {
+        OrderCommand command = orderRequestMapper.toCommand(request);
+        Orders savedOrder = orderDeadlockService.createOrder(command);
         return ResponseEntity.ok(ApiResponse.success(savedOrder, HttpStatus.CREATED));
     }
 

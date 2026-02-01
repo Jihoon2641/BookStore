@@ -14,10 +14,12 @@ public class AsyncConfig {
     @Bean(name = "logTaskExecutor")
     public Executor logTaskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(5);
-        executor.setMaxPoolSize(10);
-        executor.setQueueCapacity(100);
+        executor.setCorePoolSize(10);
+        executor.setMaxPoolSize(50);
+        executor.setQueueCapacity(500);
         executor.setThreadNamePrefix("LogExecutor-");
+        // 쓰레드 풀이 가득 찼을 때 예외를 발생시키지 않고 호출한 쓰레드에서 직접 실행하게 함
+        executor.setRejectedExecutionHandler(new java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy());
         executor.initialize();
         return executor;
     }

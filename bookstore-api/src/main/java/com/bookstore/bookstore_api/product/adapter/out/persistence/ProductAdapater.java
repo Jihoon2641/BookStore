@@ -39,6 +39,27 @@ public class ProductAdapater implements ProductRepository {
     }
 
     @Override
+    public Optional<List<Book>> findAllByIds(List<Long> ids) {
+        List<BookEntity> entities = productMapper.findAllByIds(ids);
+
+        if (entities == null || entities.isEmpty()) {
+            return Optional.empty();
+        }
+
+        List<Book> books = entities.stream()
+                .map(productConverter::toModel)
+                .toList();
+        return Optional.of(books);
+    }
+
+    @Override
+    public Optional<Book> findByIdWithLock(Long id) {
+        BookEntity entity = productMapper.findByIdWithLock(id);
+        return Optional.ofNullable(entity)
+                .map(productConverter::toModel);
+    }
+
+    @Override
     public int updateStock(List<StockDecreaseCommand> stockDecreaseCommands) {
         return productMapper.updateStock(stockDecreaseCommands);
     }
