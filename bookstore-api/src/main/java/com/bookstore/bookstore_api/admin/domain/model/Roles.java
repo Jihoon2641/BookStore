@@ -2,6 +2,7 @@ package com.bookstore.bookstore_api.admin.domain.model;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 
 import com.bookstore.bookstore_api.admin.domain.entity.AdminRole;
@@ -9,7 +10,11 @@ import com.bookstore.bookstore_api.admin.domain.entity.AdminRole;
 @Schema(description = "역할")
 @Getter
 @AllArgsConstructor
+@Builder
 public class Roles {
+
+    @Schema(description = "역할 ID")
+    private Long id;
 
     @Schema(description = "역할 이름")
     private AdminRole role;
@@ -24,10 +29,14 @@ public class Roles {
      * @param description 역할 설명
      * @return 신규 역할 정보
      */
-    public static Roles create(AdminRole role, String description) {
+    public static Roles create(Long id, AdminRole role, String description) {
         validateRoleName(role);
         validateDescription(description);
-        return new Roles(role, description);
+        return Roles.builder()
+                .id(id)
+                .role(role)
+                .description(description)
+                .build();
     }
 
     /* =============== 검증 메서드 =============== */

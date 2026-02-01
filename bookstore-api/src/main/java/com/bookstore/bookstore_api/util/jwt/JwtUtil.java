@@ -4,7 +4,13 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -16,11 +22,14 @@ public class JwtUtil {
 
     private final SecretKey key;
     private final long expiration;
+    private final UserDetailsService userDetailsService;
 
     public JwtUtil(@Value("${jwt.secret}") String secret,
-            @Value("${jwt.expiration}") long expiration) {
+            @Value("${jwt.expiration}") long expiration,
+            UserDetailsService userDetailsService) {
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.expiration = expiration;
+        this.userDetailsService = userDetailsService;
     }
 
     /**
@@ -46,7 +55,35 @@ public class JwtUtil {
     }
 
     /**
-     * 토큰에서 사용자 ID(Subject) 추출
+     * 토큰에서 인증 정보 조회
+     * 
+     * @param token JWT 토큰
+     * @return Authentication 객체
+     */
+    public Authentication getAuthentication(String token) {
+        String email = getEmail(token);
+        UserDetails userDetails = userDetailsService
+                .loadUserByUsername(email);
+        return new UsernamePasswordAuthenticationToken(userDetails, "",
+                userDetails.getAuthorities());
+    }
+
+    /**
+     * Request의 Header에서 token 값 가져오기
+     * 
+     * @param request HttpServletRequest
+     * @return JWT 토큰 string
+     */
+    public String resolveToken(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+        return null;
+    }
+
+    /**
+     * 토큰에서 사용자 ID 추출
      * 
      * @param token JWT 토큰
      * @return 사용자 ID

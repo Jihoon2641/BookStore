@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.springframework.security.core.userdetails.UserDetailsService;
 
 class JwtUtilTest {
 
@@ -12,9 +14,14 @@ class JwtUtilTest {
     private String secret = "VlwEyVlPKZ6yV9yVlwEyVlPKZ6yV9yVlwEyVlPKZ6yV9yVlwEyVlPKZ6yV9y";
     private long expiration = 3600000;
 
+    @Mock
+    private UserDetailsService userDetailsService;
+
     @BeforeEach
     void setUp() {
-        jwtUtil = new JwtUtil(secret, expiration);
+        userDetailsService = org.mockito.Mockito
+                .mock(UserDetailsService.class);
+        jwtUtil = new JwtUtil(secret, expiration, userDetailsService);
     }
 
     @Test
@@ -51,11 +58,11 @@ class JwtUtilTest {
     @DisplayName("만료된 토큰 검증 테스트")
     void validateExpiredToken() throws InterruptedException {
         // given
-        long shortExpiration = 1; // 1ms
-        JwtUtil shortLiveJwtUtil = new JwtUtil(secret, shortExpiration);
+        long shortExpiration = 1;
+        JwtUtil shortLiveJwtUtil = new JwtUtil(secret, shortExpiration, userDetailsService);
         String token = shortLiveJwtUtil.createToken(1L, "test@example.com", "USER");
 
-        Thread.sleep(10); // 토큰 만료 대기
+        Thread.sleep(10);
 
         // when
         boolean isValid = shortLiveJwtUtil.validateToken(token);

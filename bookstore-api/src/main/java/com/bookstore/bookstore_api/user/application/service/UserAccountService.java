@@ -3,6 +3,8 @@ package com.bookstore.bookstore_api.user.application.service;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
 import com.bookstore.bookstore_api.user.adapter.in.dto.response.UserLoginResponse;
 import com.bookstore.bookstore_api.user.application.port.in.LogInCommand;
 import com.bookstore.bookstore_api.user.application.port.in.SignUpCommand;
@@ -33,7 +35,8 @@ public class UserAccountService implements UserAccountUseCase {
         }
 
         User savedUser = userAccountRepository.save(
-                User.create(command.getName(), command.getEmail(), command.getPassword(), 1L));
+                User.create(command.getName(), command.getEmail(), command.getPassword(), 1L, LocalDateTime.now(),
+                        LocalDateTime.now()));
         return savedUser;
     }
 
@@ -51,6 +54,10 @@ public class UserAccountService implements UserAccountUseCase {
         }
 
         RolesEntity role = roleRepository.findById(user.getRoleId());
+
+        if (role == null) {
+            throw new RuntimeException("사용자 권한 정보를 찾을 수 없습니다.");
+        }
 
         String token = jwtUtil.createToken(user.getId(), user.getEmail(), role.getRole().name());
 

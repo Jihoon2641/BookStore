@@ -41,7 +41,7 @@ public class UserAccountAdapterMybatis implements UserAccountRepository {
         if (userEntity.isPresent()) {
             return userMapper.toModel(userEntity.get());
         } else {
-            throw new RuntimeException("사용자 조회에 실패하였습니다.");
+            return null;
         }
 
     }

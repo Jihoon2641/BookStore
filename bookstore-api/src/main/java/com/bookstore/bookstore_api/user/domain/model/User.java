@@ -1,6 +1,7 @@
 package com.bookstore.bookstore_api.user.domain.model;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -22,22 +23,31 @@ public class User {
     private String password;
     @Schema(description = "사용자 권한 ID")
     private Long roleId;
+    @Schema(description = "사용자 생성 시간")
+    private LocalDateTime createdAt;
+    @Schema(description = "사용자 수정 시간")
+    private LocalDateTime updatedAt;
 
     /**
      * 신규 사용자 생성
      * 
-     * @param name     사용자 이름
-     * @param email    사용자 이메일
-     * @param password 사용자 비밀번호
+     * @param name      사용자 이름
+     * @param email     사용자 이메일
+     * @param password  사용자 비밀번호
+     * @param roleId    사용자 권한 ID
+     * @param createdAt 사용자 생성 시간
+     * @param updatedAt 사용자 수정 시간
      * @return 신규 사용자 정보
      */
-    public static User create(String name, String email, String password, Long roleId) {
+    // TODO : Builder로 변경
+    public static User create(String name, String email, String password, Long roleId, LocalDateTime createdAt,
+            LocalDateTime updatedAt) {
         validateName(name);
         validateEmail(email);
         validatePassword(password);
         validateRoleId(roleId);
 
-        return new User(null, name, email, password, roleId);
+        return new User(null, name, email, password, roleId, createdAt, updatedAt);
     }
 
     /**
