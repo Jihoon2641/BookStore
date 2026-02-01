@@ -32,6 +32,7 @@ import java.util.HashMap;
 
 @Service
 @RequiredArgsConstructor
+@SuppressWarnings("null")
 public class OrderService implements OrderUseCase {
 
         private final OrderRepository orderRepository;
@@ -41,7 +42,6 @@ public class OrderService implements OrderUseCase {
 
         @Override
         @Transactional
-        // TODO: 추후 Global Exception Handler 적용 필요
         public Orders createOrder(OrderCommand orderCommand) {
 
                 try {
