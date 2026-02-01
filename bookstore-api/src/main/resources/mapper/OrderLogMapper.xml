@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bookstore.bookstore_api.order.adapter.out.persistence.OrderLogMapper">
+
+    <insert id="save" parameterType="OrderLogEntity" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO order_logs (
+            order_id,
+            user_id,
+            previous_status,
+            current_status,
+            result,
+            failure_reason,
+            created_at,
+            updated_at
+        ) VALUES (
+            #{orderId},
+            #{userId},
+            #{previousStatus},
+            #{currentStatus},
+            #{result},
+            #{failureReason},
+            NOW(),
+            NOW()
+        )
+    </insert>
+
+</mapper>

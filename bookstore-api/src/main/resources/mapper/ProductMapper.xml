@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bookstore.bookstore_api.product.adapter.out.persistence.ProductMapper">
+
+    <select id="findById" resultType="BookEntity">
+        SELECT * FROM books WHERE id = #{id}
+    </select>
+
+    <select id="findAllByIdsWithLock" resultType="BookEntity">
+        SELECT * FROM books WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        FOR UPDATE
+    </select>
+    
+    <update id="updateStock" parameterType="list">
+        UPDATE books
+        SET stock = CASE
+            <foreach collection="stockDecreaseCommands" item="item">
+                WHEN id = #{item.productId} THEN stock - #{item.quantity}
+            </foreach>
+            ELSE stock
+        END
+        WHERE id IN
+        <foreach collection="stockDecreaseCommands" item="item" open="(" separator="," close=")">
+            #{item.productId}
+        </foreach>
+    </update>
+
+    <insert id="saveAll" parameterType="list">
+        INSERT IGNORE INTO books (
+            title, author, publisher, isbn, 
+            price,   stock,   image_url, description, published_date, is_popular, created_at, updated_at 
+        )
+        VALUES
+        <foreach collection="books" item="item" separator=",">
+            (
+                #{item.title}, #{item.author}, #{item.publisher}, #{item.isbn}, 
+                #{item.price}, #{item.stock}, #{item.imageUrl}, #{item.description}, #{item.publishedDate},
+                #{item.isPopular}, NOW(), NOW()
+            )
+        </foreach>
+    </insert>
+
+    <update id="syncPopularStatus">
+    UPDATE books b
+    LEFT JOIN (
+        SELECT book_id
+        FROM order_items
+        WHERE created_at > NOW() - INTERVAL 7 DAY
+        GROUP BY book_id
+        HAVING COUNT(*) >= 100
+    ) popular_list ON b.id = popular_list.book_id
+    SET b.is_popular = (CASE WHEN popular_list.book_id IS NOT NULL THEN true ELSE false END)
+    WHERE b.is_popular = true OR popular_list.book_id IS NOT NULL 
+</update>
+
+</mapper>

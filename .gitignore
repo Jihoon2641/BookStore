@@ -42,3 +42,5 @@ out/
 ### Pem Files ###
 *.pem
 *.key
+
+.env

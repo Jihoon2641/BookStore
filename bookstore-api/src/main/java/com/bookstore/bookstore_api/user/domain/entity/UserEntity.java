@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 @Getter
-public class UserEntity extends BaseEntity{
+public class UserEntity extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,5 +28,8 @@ public class UserEntity extends BaseEntity{
 
     @Column(name = "password", nullable = false)
     private String password;
+
+    @Column(name = "role_id", nullable = false, columnDefinition = "bigint default 1")
+    private Long roleId;
 
 }

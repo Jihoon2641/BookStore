@@ -9,7 +9,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.bookstore.bookstore_api.user.adapter.in.dto.request.LogInDto;
 import com.bookstore.bookstore_api.user.adapter.in.dto.request.SignUpDto;
-import com.bookstore.bookstore_api.user.adapter.in.dto.response.UserAccountResponseDto;
+import com.bookstore.bookstore_api.user.adapter.in.dto.response.UserAccountResponse;
+import com.bookstore.bookstore_api.user.adapter.in.dto.response.UserLoginResponse;
 import com.bookstore.bookstore_api.user.application.port.in.LogInCommand;
 import com.bookstore.bookstore_api.user.application.port.in.SignUpCommand;
 import com.bookstore.bookstore_api.user.application.port.in.UserAccountUseCase;
@@ -29,17 +30,15 @@ public class UserAccountController {
     @PostMapping("/signup")
     public ResponseEntity<Object> signUp(@Valid @RequestBody SignUpDto signUpDto) {
         SignUpCommand command = new SignUpCommand(
-            signUpDto.name(),
-            signUpDto.email(),
-            signUpDto.password()
-        );
-        
+                signUpDto.name(),
+                signUpDto.email(),
+                signUpDto.password());
+
         User user = userAccountUseCase.signUp(command);
 
-        UserAccountResponseDto responseDto = new UserAccountResponseDto(
-            user.getName(),
-            user.getEmail()
-        );
+        UserAccountResponse responseDto = new UserAccountResponse(
+                user.getName(),
+                user.getEmail());
 
         return ResponseEntity.ok(ApiResponse.success(responseDto, "회원가입 성공", HttpStatus.OK));
     }
@@ -47,18 +46,12 @@ public class UserAccountController {
     @PostMapping("/login")
     public ResponseEntity<Object> login(@Valid @RequestBody LogInDto loginDto) {
         LogInCommand command = new LogInCommand(
-            loginDto.email(),
-            loginDto.password()
-        );
-        
-        User user = userAccountUseCase.login(command);
+                loginDto.email(),
+                loginDto.password());
 
-        UserAccountResponseDto responseDto = new UserAccountResponseDto(
-            user.getName(),
-            user.getEmail()
-        );
+        UserLoginResponse response = userAccountUseCase.login(command);
 
-        return ResponseEntity.ok(ApiResponse.success(responseDto, "로그인 성공", HttpStatus.OK));
+        return ResponseEntity.ok(ApiResponse.success(response, "로그인 성공", HttpStatus.OK));
     }
-    
+
 }

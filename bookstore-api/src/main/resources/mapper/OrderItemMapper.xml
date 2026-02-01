@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bookstore.bookstore_api.order.adapter.out.persistence.OrderItemMapper">
+
+    <insert id="saveAll" parameterType="list">
+        INSERT INTO order_items (order_id, book_id, quantity, price, created_at, updated_at)
+        VALUES
+        <foreach collection="orderItems" item="item" separator=",">
+            (#{item.orderId}, #{item.bookId}, #{item.quantity}, #{item.price}, NOW(), NOW())
+        </foreach>
+    </insert>
+
+    <select id="findByOrderId" resultType="OrderItemEntity">
+        SELECT id, order_id, book_id, quantity, price
+        FROM order_items
+        WHERE order_id = #{orderId}
+    </select>
+
+</mapper>
