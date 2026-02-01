@@ -25,8 +25,7 @@ public class UserAccountService implements UserAccountUseCase {
         }
 
         User savedUser = userAccountRepository.save(
-            User.create(command.getName(), command.getEmail(), command.getPassword())
-        );
+                User.create(command.getName(), command.getEmail(), command.getPassword(), 1L));
         return savedUser;
     }
 
@@ -47,7 +46,7 @@ public class UserAccountService implements UserAccountUseCase {
 
     @Override
     public void singOut(String email) {
-        
+
     }
 
 }

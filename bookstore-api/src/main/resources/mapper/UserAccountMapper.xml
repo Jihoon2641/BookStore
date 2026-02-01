@@ -8,7 +8,8 @@
             id, 
             name, 
             email, 
-            password
+            password,
+            role_id
         FROM user_accounts 
         WHERE email = #{email}
     </select>
@@ -17,11 +18,13 @@
         INSERT INTO user_accounts (
             name, 
             email, 
-            password
+            password,
+            role_id
         ) VALUES (
             #{name}, 
             #{email}, 
-            #{password}
+            #{password},
+            #{roleId}
         )
     </insert>
 
