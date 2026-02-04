@@ -1,6 +1,6 @@
 package com.bookstore.bookstore_api.order.adapter.out.persistence;
 
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Propagation;
 
 import com.bookstore.bookstore_api.order.domain.entity.OrderLogEntity;
 
-@Component
+@Repository
 @RequiredArgsConstructor
 public class OrderLogAdapter implements OrderLogRepository {
 

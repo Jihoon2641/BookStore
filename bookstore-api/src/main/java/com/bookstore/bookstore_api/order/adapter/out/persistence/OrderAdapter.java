@@ -1,6 +1,6 @@
 package com.bookstore.bookstore_api.order.adapter.out.persistence;
 
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -8,8 +8,7 @@ import com.bookstore.bookstore_api.order.application.port.out.OrderRepository;
 import com.bookstore.bookstore_api.order.domain.model.Orders;
 import com.bookstore.bookstore_api.order.domain.entity.OrdersEntity;
 
-
-@Component
+@Repository
 @RequiredArgsConstructor
 public class OrderAdapter implements OrderRepository {
 
