@@ -52,6 +52,20 @@ services:
       retries: 5
     restart: unless-stopped
 
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: bookstore-kafka-ui
+    ports:
+      - "8989:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: bookstore-kafka
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+      DYNAMIC_CONFIG_ENABLED: "true"
+    depends_on:
+      - kafka
+    restart: unless-stopped
+
   bookstore-api:
     build:
       context: ./bookstore-api
