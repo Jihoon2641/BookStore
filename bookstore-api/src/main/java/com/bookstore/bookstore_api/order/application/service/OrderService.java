@@ -10,18 +10,19 @@ import com.bookstore.bookstore_api.order.application.port.out.OrderRepository;
 import com.bookstore.bookstore_api.order.domain.entity.OrderStatus;
 import com.bookstore.bookstore_api.order.domain.model.OrderItem;
 import com.bookstore.bookstore_api.order.domain.model.OrderLog;
+import com.bookstore.bookstore_api.order.domain.model.OrderLogOutBox;
 import com.bookstore.bookstore_api.order.domain.model.Orders;
+import com.bookstore.bookstore_api.order.utils.OutboxPayloadSerializer;
 import com.bookstore.bookstore_api.order.domain.entity.OrderResult;
 
 import org.springframework.transaction.annotation.Transactional;
 
-import com.bookstore.bookstore_api.order.application.event.object.OrderLogEvent;
 import com.bookstore.bookstore_api.order.application.port.in.OrderCommand;
 import com.bookstore.bookstore_api.product.adapter.in.StockDecreaseCommand;
 import com.bookstore.bookstore_api.product.application.port.out.ProductRepository;
 import com.bookstore.bookstore_api.order.application.port.in.OrderItemCommand;
+import com.bookstore.bookstore_api.order.application.port.out.OrderLogOutboxRepository;
 import com.bookstore.bookstore_api.product.domain.model.Book;
-import org.springframework.context.ApplicationEventPublisher;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -32,14 +33,15 @@ import java.util.HashMap;
 
 @Service
 @RequiredArgsConstructor
-@SuppressWarnings("null")
 public class OrderService implements OrderUseCase {
 
         private final OrderRepository orderRepository;
         private final OrderItemRepository orderItemRepository;
         private final ProductRepository productRepository;
-        private final ApplicationEventPublisher eventPublisher;
-
+        private final OrderLogOutboxRepository orderLogOutboxRepository;
+        private final OutboxPayloadSerializer outboxPayloadSerializer;
+        private final OutBoxFailureService outBoxFailureService;
+        
         @Override
         @Transactional
         public Orders createOrder(OrderCommand orderCommand) {
@@ -110,29 +112,20 @@ public class OrderService implements OrderUseCase {
                                         OrderResult.SUCCESS,
                                         null);
 
-                        // 이벤트 객체 생성
-                        OrderLogEvent orderLogEvent = OrderLogEvent.success(
+                        // Outbox 저장
+                        String payload = outboxPayloadSerializer.serializeOrderLog(orderLog);
+                        OrderLogOutBox orderLogOutbox = OrderLogOutBox.pending(
                                         orderLog.getOrderId(),
                                         orderLog.getUserId(),
-                                        orderLog.getPreviousStatus(),
-                                        orderLog.getCurrentStatus(),
-                                        orderLog.getResult(),
-                                        orderLog.getFailureReason());
+                                        payload);
 
-                        // 이벤트 발행
-                        eventPublisher.publishEvent(orderLogEvent);
+                        orderLogOutboxRepository.save(orderLogOutbox);
 
                         return savedOrder;
 
                 } catch (Exception e) {
-
-                        // 실패 이벤트 객체 생성
-                        OrderLogEvent orderLogEvent = OrderLogEvent.failure(
-                                        orderCommand.getUserId(),
-                                        e.getMessage());
-
-                        // 이벤트 발행
-                        eventPublisher.publishEvent(orderLogEvent);
+                        // Outbox 실패 
+                        outBoxFailureService.saveFailureLog(orderCommand.getUserId(), e.getMessage());
 
                         throw new RuntimeException("주문 생성에 실패하였습니다. " + e.getMessage());
                 }
