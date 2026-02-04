@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bookstore.bookstore_api.order.adapter.out.persistence.OrderLogOutboxMapper">
+
+    <resultMap id="OrderLogOutboxResultMap" type="OrderLogOutboxEntity">
+        <id property="id" column="id"/>
+        <result property="orderId" column="order_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="payload" column="payload"/>
+        <result property="status" column="status"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="sentAt" column="sent_at"/>
+        <result property="retryCount" column="retry_count"/>
+        <result property="lastError" column="last_error"/>
+    </resultMap>
+
+    <insert id="save" parameterType="OrderLogOutboxEntity">
+        INSERT INTO order_log_outbox (
+            order_id,
+            user_id,
+            payload,
+            status,
+            created_at,
+            sent_at,
+            retry_count,
+            last_error
+        ) VALUES (
+            #{orderId},
+            #{userId},
+            #{payload},
+            #{status},
+            #{createdAt},
+            #{sentAt},
+            #{retryCount},
+            #{lastError}
+        )
+    </insert>
+
+    <select id="findPendingWithLimit" resultMap="OrderLogOutboxResultMap">
+        SELECT id, order_id, user_id, payload, status, created_at, sent_at, retry_count, last_error
+        FROM order_log_outbox
+        WHERE status = 'PENDING'
+        ORDER BY created_at ASC
+        LIMIT #{limit}
+    </select>
+
+    <update id="updateStatusToSent">
+        UPDATE order_log_outbox
+        SET status = 'SENT', sent_at = #{sentAt}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateRetryAndError">
+        UPDATE order_log_outbox
+        SET retry_count = retry_count + 1, 
+            last_error = #{lastError},
+            status = CASE WHEN retry_count >= #{maxRetry} THEN 'FAILED' ELSE status END
+        WHERE id = #{id}
+    </update>
+
+</mapper>
