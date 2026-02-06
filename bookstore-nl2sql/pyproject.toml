@@ -1,0 +1,39 @@
+[project]
+name = "bookstore-nl2sql"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "조지훈",email = "dev.jihoon2641@gmail.com"}
+]
+requires-python = ">=3.11"
+dependencies = [
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[dependency-groups]
+dev = [
+    "ruff (>=0.15.0,<0.16.0)"
+]
+
+[tool.ruff]
+# 한 줄의 최대 길이 (보통 88이나 100을 사용합니다)
+line-length = 100
+
+# 검사할 규칙 설정
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle 에러
+    "F",   # Pyflakes (런타임 에러 유발 요소)
+    "I",   # isort (임포트 순서 정렬)
+    "UP",  # pyupgrade (최신 파이썬 문법 권장)
+    "B",   # flake8-bugbear (잠재적 버그 탐지)
+]
+ignore = []
+
+[tool.ruff.format]
+# 따옴표 스타일 등을 고정할 수 있습니다.
+quote-style = "double"
