@@ -129,38 +129,4 @@ public class UserLogEntity extends BaseEntity {
     @Column(name = "method_name", length = 100)
     private String methodName;
 
-    // ==================== 비즈니스 메서드 ====================
-
-    /**
-     * 이상 패턴으로 마킹
-     */
-    public void markAsAnomalous(AnomalyType type, String description, int score) {
-        this.isAnomalous = true;
-        this.anomalyType = type;
-        this.anomalyDescription = description;
-        this.threatScore = Math.min(100, Math.max(0, score));
-    }
-
-    /**
-     * 요청 차단 처리
-     */
-    public void block(String reason) {
-        this.isBlocked = true;
-        this.blockedReason = reason;
-    }
-
-    /**
-     * 실패 시도 횟수 증가
-     */
-    public void incrementFailedAttempts() {
-        this.failedAttempts++;
-    }
-
-    /**
-     * 요청 횟수 업데이트
-     */
-    public void updateRequestCount(int count) {
-        this.requestCountInWindow = count;
-    }
-
 }

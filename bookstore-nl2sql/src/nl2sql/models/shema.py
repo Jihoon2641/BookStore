@@ -12,7 +12,7 @@ class ColumnInfo(BaseModel):
     key: Optional[str] = Field(None, description="키 종류, 예: PRIMARY KEY, FOREIGN KEY, UNIQUE KEY, INDEX, UNIQUE, NOT NULL")
     default: Optional[str] = Field(None, description="기본값, 예: 0")
     extra: Optional[str] = Field(None, description="추가 정보, 예: AUTO_INCREMENT")
-    description: str = Field(..., description="컬럼 설명, 예: 재고 수량")
+    description_ko: str = Field(..., description="컬럼 설명, 예: 재고 수량")
 
 
 class TableSchema(BaseModel):
@@ -21,10 +21,9 @@ class TableSchema(BaseModel):
     """
     table_name: str = Field(..., description="테이블 이름")
     columns: List[ColumnInfo] = Field(..., description="컬럼 목록")
-    description: str = Field(..., description="테이블 설명, 예: 도서 정보")
+    description_ko: str = Field(..., description="테이블 설명, 예: 도서 정보")
 
     foreign_keys: List[dict] = Field(..., description="외래키 정보")
-    referenced_by: List[dict] = Field(..., description="이 테이블을 참조하는 FK들")
 
 class SchemaMetadata(BaseModel):
     """
