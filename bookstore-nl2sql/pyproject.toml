@@ -15,6 +15,7 @@ dependencies = [
     "sentence-transformers (>=5.2.2,<6.0.0)",
     "numpy (>=2.4.2,<3.0.0)",
     "chromadb (>=1.4.1,<2.0.0)",
+    "openai (>=2.17.0,<3.0.0)",
 ]
 
 
@@ -29,6 +30,7 @@ packages = [{include = "nl2sql", from = "src"}]
 dev = [
     "ruff (>=0.15.0,<0.16.0)",
     "pytest (>=9.0.2,<10.0.0)",
+    "python-dotenv (>=1.2.1,<2.0.0)",
 ]
 
 [tool.ruff]
