@@ -1,0 +1,936 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2026-02-07 21:44:17.970487",
+  "tables": [
+    {
+      "table_name": "admins",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "nullable": false,
+          "key": "PRI",
+          "default": null,
+          "extra": "auto_increment",
+          "description_ko": "관리자 고유 ID"
+        },
+        {
+          "name": "created_at",
+          "type": "datetime(6)",
+          "nullable": false,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "생성 일시"
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime(6)",
+          "nullable": false,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "수정 일시"
+        },
+        {
+          "name": "admin_id",
+          "type": "varchar(255)",
+          "nullable": false,
+          "key": "UNI",
+          "default": null,
+          "extra": null,
+          "description_ko": "관리자 아이디(로그인)"
+        },
+        {
+          "name": "password",
+          "type": "varchar(255)",
+          "nullable": false,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "비밀번호"
+        },
+        {
+          "name": "role_id",
+          "type": "bigint",
+          "nullable": false,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "역할 ID"
+        }
+      ],
+      "description_ko": "관리자 정보",
+      "foreign_keys": [
+        {
+          "column_name": "role_id",
+          "referenced_table": "roles",
+          "referenced_column": "id"
+        }
+      ]
+    },
+    {
+      "table_name": "books",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "nullable": false,
+          "key": "PRI",
+          "default": null,
+          "extra": "auto_increment",
+          "description_ko": "도서 고유 ID"
+        },
+        {
+          "name": "created_at",
+          "type": "datetime(6)",
+          "nullable": false,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "생성 일시"
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime(6)",
+          "nullable": false,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "수정 일시"
+        },
+        {
+          "name": "author",
+          "type": "varchar(255)",
+          "nullable": false,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "저자"
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "nullable": true,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "도서 설명"
+        },
+        {
+          "name": "image_url",
+          "type": "varchar(255)",
+          "nullable": false,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "썸네일 이미지 URL"
+        },
+        {
+          "name": "isbn",
+          "type": "varchar(255)",
+          "nullable": false,
+          "key": "UNI",
+          "default": null,
+          "extra": null,
+          "description_ko": "ISBN"
+        },
+        {
+          "name": "price",
+          "type": "bigint",
+          "nullable": false,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "가격"
+        },
+        {
+          "name": "published_date",
+          "type": "datetime(6)",
+          "nullable": true,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "출판일"
+        },
+        {
+          "name": "publisher",
+          "type": "varchar(255)",
+          "nullable": false,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "출판사"
+        },
+        {
+          "name": "stock",
+          "type": "bigint",
+          "nullable": false,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "재고 수량"
+        },
+        {
+          "name": "title",
+          "type": "varchar(255)",
+          "nullable": false,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "도서 제목"
+        },
+        {
+          "name": "is_popular",
+          "type": "tinyint(1)",
+          "nullable": false,
+          "key": null,
+          "default": "0",
+          "extra": null,
+          "description_ko": "인기 도서 여부"
+        }
+      ],
+      "description_ko": "도서 정보",
+      "foreign_keys": []
+    },
+    {
+      "table_name": "order_items",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "nullable": false,
+          "key": "PRI",
+          "default": null,
+          "extra": "auto_increment",
+          "description_ko": "주문 상품 고유 ID"
+        },
+        {
+          "name": "created_at",
+          "type": "datetime(6)",
+          "nullable": false,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "생성 일시"
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime(6)",
+          "nullable": false,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "수정 일시"
+        },
+        {
+          "name": "book_id",
+          "type": "bigint",
+          "nullable": false,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "도서 ID"
+        },
+        {
+          "name": "order_id",
+          "type": "bigint",
+          "nullable": false,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "주문 ID"
+        },
+        {
+          "name": "price",
+          "type": "bigint",
+          "nullable": false,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "가격"
+        },
+        {
+          "name": "quantity",
+          "type": "bigint",
+          "nullable": false,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "도서 주문 수량"
+        }
+      ],
+      "description_ko": "주문 상품 정보",
+      "foreign_keys": [
+        {
+          "column_name": "book_id",
+          "referenced_table": "books",
+          "referenced_column": "id"
+        },
+        {
+          "column_name": "order_id",
+          "referenced_table": "orders",
+          "referenced_column": "id"
+        }
+      ]
+    },
+    {
+      "table_name": "order_log_outbox",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "nullable": false,
+          "key": "PRI",
+          "default": null,
+          "extra": "auto_increment",
+          "description_ko": "주문 로그 아웃박스 고유 ID"
+        },
+        {
+          "name": "created_at",
+          "type": "datetime(6)",
+          "nullable": true,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "생성 일시"
+        },
+        {
+          "name": "last_error",
+          "type": "text",
+          "nullable": true,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "오류 메시지"
+        },
+        {
+          "name": "order_id",
+          "type": "bigint",
+          "nullable": true,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "주문 ID"
+        },
+        {
+          "name": "payload",
+          "type": "text",
+          "nullable": true,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "Kafka 발행용 주문 로그 페이로드(JSON 형식)"
+        },
+        {
+          "name": "retry_count",
+          "type": "int",
+          "nullable": true,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "재시도 횟수"
+        },
+        {
+          "name": "sent_at",
+          "type": "datetime(6)",
+          "nullable": true,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "전송 일시"
+        },
+        {
+          "name": "status",
+          "type": "enum('FAILED','PENDING','SENT')",
+          "nullable": true,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "발행 상태(PENDING: 대기, SENT: 전송 완료, FAILED: 실패)"
+        },
+        {
+          "name": "user_id",
+          "type": "bigint",
+          "nullable": true,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "사용자 ID"
+        }
+      ],
+      "description_ko": "주문 로그 아웃박스 정보",
+      "foreign_keys": [
+        {
+          "column_name": "user_id",
+          "referenced_table": "users",
+          "referenced_column": "id"
+        },
+        {
+          "column_name": "order_id",
+          "referenced_table": "orders",
+          "referenced_column": "id"
+        }
+      ]
+    },
+    {
+      "table_name": "order_logs",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "nullable": false,
+          "key": "PRI",
+          "default": null,
+          "extra": "auto_increment",
+          "description_ko": "주문 로그 ID"
+        },
+        {
+          "name": "created_at",
+          "type": "datetime(6)",
+          "nullable": false,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "생성 일시"
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime(6)",
+          "nullable": false,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "수정 일시"
+        },
+        {
+          "name": "current_status",
+          "type": "enum('CANCELLED','CONFIRMED','DELIVERED','FAILED','PENDING','SHIPPED')",
+          "nullable": false,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "현재 상태"
+        },
+        {
+          "name": "failure_reason",
+          "type": "varchar(500)",
+          "nullable": true,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "오류 이유"
+        },
+        {
+          "name": "order_id",
+          "type": "bigint",
+          "nullable": true,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "주문 ID"
+        },
+        {
+          "name": "previous_status",
+          "type": "enum('CANCELLED','CONFIRMED','DELIVERED','FAILED','PENDING','SHIPPED')",
+          "nullable": true,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "이전 상태"
+        },
+        {
+          "name": "result",
+          "type": "enum('FAILURE','SUCCESS')",
+          "nullable": false,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "결과"
+        },
+        {
+          "name": "user_id",
+          "type": "bigint",
+          "nullable": false,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "사용자 ID"
+        }
+      ],
+      "description_ko": "주문 로그 정보",
+      "foreign_keys": [
+        {
+          "column_name": "user_id",
+          "referenced_table": "users",
+          "referenced_column": "id"
+        },
+        {
+          "column_name": "order_id",
+          "referenced_table": "orders",
+          "referenced_column": "id"
+        }
+      ]
+    },
+    {
+      "table_name": "orders",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "nullable": false,
+          "key": "PRI",
+          "default": null,
+          "extra": "auto_increment",
+          "description_ko": "주문 고유 ID"
+        },
+        {
+          "name": "created_at",
+          "type": "datetime(6)",
+          "nullable": false,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "생성 일시"
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime(6)",
+          "nullable": false,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "수정 일시"
+        },
+        {
+          "name": "order_date",
+          "type": "datetime(6)",
+          "nullable": false,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "주문 일시"
+        },
+        {
+          "name": "status",
+          "type": "enum('CANCELLED','CONFIRMED','DELIVERED','FAILED','PENDING','SHIPPED')",
+          "nullable": false,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "주문 상태"
+        },
+        {
+          "name": "user_id",
+          "type": "bigint",
+          "nullable": false,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "사용자 ID"
+        }
+      ],
+      "description_ko": "주문 정보",
+      "foreign_keys": [
+        {
+          "column_name": "user_id",
+          "referenced_table": "users",
+          "referenced_column": "id"
+        }
+      ]
+    },
+    {
+      "table_name": "roles",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "nullable": false,
+          "key": "PRI",
+          "default": null,
+          "extra": "auto_increment",
+          "description_ko": "역할 고유 ID"
+        },
+        {
+          "name": "created_at",
+          "type": "datetime(6)",
+          "nullable": false,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "생성 일시"
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime(6)",
+          "nullable": false,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "수정 일시"
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "nullable": false,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "역할 설명"
+        },
+        {
+          "name": "role",
+          "type": "enum('LEVEL_1','LEVEL_2','SUPER_ADMIN','USER')",
+          "nullable": false,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "역할"
+        }
+      ],
+      "description_ko": "역할 정보",
+      "foreign_keys": []
+    },
+    {
+      "table_name": "user_logs",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "nullable": false,
+          "key": "PRI",
+          "default": null,
+          "extra": "auto_increment",
+          "description_ko": "사용자 로그 ID"
+        },
+        {
+          "name": "created_at",
+          "type": "datetime(6)",
+          "nullable": false,
+          "key": "MUL",
+          "default": null,
+          "extra": null,
+          "description_ko": "생성 일시"
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime(6)",
+          "nullable": false,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "수정 일시"
+        },
+        {
+          "name": "anomaly_description",
+          "type": "varchar(500)",
+          "nullable": true,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "비정상 설명"
+        },
+        {
+          "name": "anomaly_type",
+          "type": "enum('BOT_DETECTED','BRUTE_FORCE_ATTEMPT','NONE','RATE_LIMIT_EXCEEDED','UNAUTHORIZED_ACCESS','UNUSUAL_ACCESS_PATTERN')",
+          "nullable": true,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "비정상 유형"
+        },
+        {
+          "name": "blocked_reason",
+          "type": "varchar(255)",
+          "nullable": true,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "차단 이유"
+        },
+        {
+          "name": "class_name",
+          "type": "varchar(255)",
+          "nullable": true,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "클래스 이름"
+        },
+        {
+          "name": "device_fingerprint",
+          "type": "varchar(255)",
+          "nullable": true,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "디바이스 지문"
+        },
+        {
+          "name": "failed_attempts",
+          "type": "int",
+          "nullable": true,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "실패 시도 횟수"
+        },
+        {
+          "name": "ip_address",
+          "type": "varchar(50)",
+          "nullable": true,
+          "key": "MUL",
+          "default": null,
+          "extra": null,
+          "description_ko": "IP 주소"
+        },
+        {
+          "name": "is_anomalous",
+          "type": "tinyint(1)",
+          "nullable": false,
+          "key": "MUL",
+          "default": null,
+          "extra": null,
+          "description_ko": "비정상 여부"
+        },
+        {
+          "name": "is_blocked",
+          "type": "tinyint(1)",
+          "nullable": false,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "차단 여부"
+        },
+        {
+          "name": "jwt_id",
+          "type": "varchar(100)",
+          "nullable": true,
+          "key": "MUL",
+          "default": null,
+          "extra": null,
+          "description_ko": "JWT ID"
+        },
+        {
+          "name": "log_level",
+          "type": "enum('DEBUG','ERROR','INFO','TRACE','WARN')",
+          "nullable": false,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "로그 레벨"
+        },
+        {
+          "name": "message",
+          "type": "text",
+          "nullable": false,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "메시지"
+        },
+        {
+          "name": "method_name",
+          "type": "varchar(100)",
+          "nullable": true,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "메서드 이름"
+        },
+        {
+          "name": "query_params",
+          "type": "varchar(1000)",
+          "nullable": true,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "쿼리 파라미터"
+        },
+        {
+          "name": "request_body",
+          "type": "text",
+          "nullable": true,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "요청 바디"
+        },
+        {
+          "name": "request_count_in_window",
+          "type": "int",
+          "nullable": true,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "요청 횟수 윈도우"
+        },
+        {
+          "name": "request_headers",
+          "type": "text",
+          "nullable": true,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "요청 헤더"
+        },
+        {
+          "name": "request_method",
+          "type": "varchar(10)",
+          "nullable": true,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "요청 메서드"
+        },
+        {
+          "name": "request_url",
+          "type": "varchar(500)",
+          "nullable": true,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "요청 URL"
+        },
+        {
+          "name": "response_status",
+          "type": "int",
+          "nullable": true,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "응답 상태"
+        },
+        {
+          "name": "response_time_ms",
+          "type": "bigint",
+          "nullable": true,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "응답 시간(ms)"
+        },
+        {
+          "name": "stack_trace",
+          "type": "text",
+          "nullable": true,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "스택 트레이스"
+        },
+        {
+          "name": "threat_score",
+          "type": "int",
+          "nullable": true,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "위협 점수"
+        },
+        {
+          "name": "user_agent",
+          "type": "varchar(500)",
+          "nullable": true,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "사용자 에이전트"
+        },
+        {
+          "name": "user_id",
+          "type": "bigint",
+          "nullable": true,
+          "key": "MUL",
+          "default": null,
+          "extra": null,
+          "description_ko": "사용자 ID"
+        }
+      ],
+      "description_ko": "사용자 로그 정보",
+      "foreign_keys": [
+        {
+          "column_name": "user_id",
+          "referenced_table": "users",
+          "referenced_column": "id"
+        }
+      ]
+    },
+    {
+      "table_name": "users",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "nullable": false,
+          "key": "PRI",
+          "default": null,
+          "extra": "auto_increment",
+          "description_ko": "사용자 고유 ID"
+        },
+        {
+          "name": "created_at",
+          "type": "datetime(6)",
+          "nullable": false,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "생성 일시"
+        },
+        {
+          "name": "updated_at",
+          "type": "datetime(6)",
+          "nullable": false,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "수정 일시"
+        },
+        {
+          "name": "email",
+          "type": "varchar(255)",
+          "nullable": false,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "이메일"
+        },
+        {
+          "name": "name",
+          "type": "varchar(255)",
+          "nullable": false,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "이름"
+        },
+        {
+          "name": "password",
+          "type": "varchar(255)",
+          "nullable": false,
+          "key": null,
+          "default": null,
+          "extra": null,
+          "description_ko": "비밀번호"
+        },
+        {
+          "name": "role_id",
+          "type": "bigint",
+          "nullable": false,
+          "key": null,
+          "default": "1",
+          "extra": null,
+          "description_ko": "역할 ID"
+        }
+      ],
+      "description_ko": "사용자 정보",
+      "foreign_keys": [
+        {
+          "column_name": "role_id",
+          "referenced_table": "roles",
+          "referenced_column": "id"
+        }
+      ]
+    }
+  ]
+}

@@ -7,6 +7,14 @@ authors = [
 ]
 requires-python = ">=3.11"
 dependencies = [
+    "pydantic (>=2.12.5,<3.0.0)",
+    "loguru (==0.7.0)",
+    "pymysql (>=1.1.2,<2.0.0)",
+    "sqlalchemy (>=2.0.46,<3.0.0)",
+    "pyyaml>=6.0.3",
+    "sentence-transformers (>=5.2.2,<6.0.0)",
+    "numpy (>=2.4.2,<3.0.0)",
+    "chromadb (>=1.4.1,<2.0.0)",
 ]
 
 
@@ -14,9 +22,13 @@ dependencies = [
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 
+[tool.poetry]
+packages = [{include = "nl2sql", from = "src"}]
+
 [dependency-groups]
 dev = [
-    "ruff (>=0.15.0,<0.16.0)"
+    "ruff (>=0.15.0,<0.16.0)",
+    "pytest (>=9.0.2,<10.0.0)",
 ]
 
 [tool.ruff]
