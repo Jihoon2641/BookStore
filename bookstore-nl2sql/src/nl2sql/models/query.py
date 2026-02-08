@@ -1,0 +1,47 @@
+from datetime import datetime
+from pydantic import BaseModel, Field
+from typing import List, Optional
+
+class QueryRequest(BaseModel):
+    query: str = Field(..., description="자연어 질문")
+    user_id: Optional[str] = Field(None, description="사용자(관리자) ID")
+
+class SchemaContext(BaseModel):
+    """검색된 스키마 정보"""
+    table_name: str = Field(..., description="테이블 이름")
+    description: str = Field(..., description="테이블 설명")
+    columns: str = Field(..., description="컬럼 정보, JSON 형식")
+    foreign_keys: str = Field(..., description="외래키 정보, JSON 형식")
+    distance: float = Field(..., description="유사도")
+
+class FewShotContext(BaseModel):
+    """few-shot 정보"""
+    question: str = Field(..., description="자연어 질문")
+    sql: str = Field(..., description="정답 SQL 쿼리")
+    explanation: str = Field(..., description="SQL 설명")
+    distance: float = Field(..., description="유사도")
+
+class QueryResponse(BaseModel):
+    """쿼리 처리 결과"""
+    question: str = Field(..., description="자연어 질문")
+    sql: str = Field(..., description="생성된 SQL 쿼리")
+    generator_type: str = "rag"
+    confidence: Optional[float] = None
+
+    # 검색된 컨텍스트
+    retrieved_schema: List[SchemaContext] = Field(description="검색된 스키마 컨텍스트")
+    retrieved_few_shot: List[FewShotContext] = Field(description="검색된 few-shot 컨텍스트")
+
+    # 메타 정보
+    execution_time_ms: int = Field(..., description="실행 시간 (밀리초)")
+    timestamp: datetime = Field(default_factory=datetime.now)
+
+class QueryLog(BaseModel):
+    """쿼리 로그"""
+    timestamp: str
+    question: str
+    sql: str
+    generator_type: str
+    confidence: Optional[float] = None
+    execution_time_ms: int
+    user_id: Optional[str] = None
