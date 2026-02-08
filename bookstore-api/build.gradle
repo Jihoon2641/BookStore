@@ -43,6 +43,9 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
     
+    // Rate Limiting
+    implementation 'com.bucket4j:bucket4j-core:8.10.1'
+    
     compileOnly 'org.projectlombok:lombok'
     compileOnly 'org.mapstruct:mapstruct:1.5.5.Final'
     

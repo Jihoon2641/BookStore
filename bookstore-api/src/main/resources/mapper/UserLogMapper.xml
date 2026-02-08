@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bookstore.bookstore_api.user.adapter.out.persistence.UserLogMapper">
+
+    <resultMap id="UserLogResultMap" type="com.bookstore.bookstore_api.user.domain.entity.UserLogEntity">
+        <id property="id" column="id"/>
+        <result property="logLevel" column="log_level"/>
+        <result property="message" column="message"/>
+        <result property="requestUrl" column="request_url"/>
+        <result property="requestMethod" column="request_method"/>
+        <result property="requestBody" column="request_body"/>
+        <result property="requestHeaders" column="request_headers"/>
+        <result property="queryParams" column="query_params"/>
+        <result property="responseStatus" column="response_status"/>
+        <result property="responseTimeMs" column="response_time_ms"/>
+        <result property="userId" column="user_id"/>
+        <result property="jwtId" column="jwt_id"/>
+        <result property="ipAddress" column="ip_address"/>
+        <result property="userAgent" column="user_agent"/>
+        <result property="deviceFingerprint" column="device_fingerprint"/>
+        <result property="isAnomalous" column="is_anomalous"/>
+        <result property="anomalyType" column="anomaly_type"/>
+        <result property="anomalyDescription" column="anomaly_description"/>
+        <result property="threatScore" column="threat_score"/>
+        <result property="requestCountInWindow" column="request_count_in_window"/>
+        <result property="failedAttempts" column="failed_attempts"/>
+        <result property="isBlocked" column="is_blocked"/>
+        <result property="blockedReason" column="blocked_reason"/>
+        <result property="stackTrace" column="stack_trace"/>
+        <result property="className" column="class_name"/>
+        <result property="methodName" column="method_name"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <insert id="save" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user_logs (
+            log_level,
+            message,
+            request_url,
+            request_method,
+            request_body,
+            request_headers,
+            query_params,
+            response_status,
+            response_time_ms,
+            user_id,
+            jwt_id,
+            ip_address,
+            user_agent,
+            device_fingerprint,
+            is_anomalous,
+            anomaly_type,
+            anomaly_description,
+            threat_score,
+            request_count_in_window,
+            failed_attempts,
+            is_blocked,
+            blocked_reason,
+            stack_trace,
+            class_name,
+            method_name,
+            created_at,
+            updated_at
+        ) VALUES (
+            #{logLevel},
+            #{message},
+            #{requestUrl},
+            #{requestMethod},
+            #{requestBody},
+            #{requestHeaders},
+            #{queryParams},
+            #{responseStatus},
+            #{responseTimeMs},
+            #{userId},
+            #{jwtId},
+            #{ipAddress},
+            #{userAgent},
+            #{deviceFingerprint},
+            #{isAnomalous},
+            #{anomalyType},
+            #{anomalyDescription},
+            #{threatScore},
+            #{requestCountInWindow},
+            #{failedAttempts},
+            #{isBlocked},
+            #{blockedReason},
+            #{stackTrace},
+            #{className},
+            #{methodName},
+            NOW(),
+            NOW()
+        )
+    </insert>
+
+    <select id="countByIpAddressAndCreatedAtAfter" resultType="long">
+        SELECT COUNT(*)
+        FROM user_logs
+        WHERE ip_address = #{ipAddress}
+          AND created_at > #{after}
+    </select>
+
+    <select id="findByIpAddressAndIsAnomalousTrueOrderByCreatedAtDesc" resultMap="UserLogResultMap">
+        SELECT *
+        FROM user_logs
+        WHERE ip_address = #{ipAddress}
+          AND is_anomalous = true
+        ORDER BY created_at DESC
+    </select>
+
+    <select id="findByUserIdOrderByCreatedAtDesc" resultMap="UserLogResultMap">
+        SELECT *
+        FROM user_logs
+        WHERE user_id = #{userId}
+        ORDER BY created_at DESC
+    </select>
+
+</mapper>

@@ -1,4 +1,4 @@
-package com.bookstore.bookstore_api.log.domain.entity;
+package com.bookstore.bookstore_api.user.domain.entity;
 
 public enum LogLevel {
     TRACE,

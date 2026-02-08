@@ -13,7 +13,7 @@ services:
     volumes:
       - bookstore-db-data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -46,10 +46,24 @@ services:
     depends_on:
       - zookeeper
     healthcheck:
-      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      test: [ "CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092" ]
       interval: 10s
       timeout: 10s
       retries: 5
+    restart: unless-stopped
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: bookstore-kafka-ui
+    ports:
+      - "8989:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: bookstore-kafka
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+      DYNAMIC_CONFIG_ENABLED: "true"
+    depends_on:
+      - kafka
     restart: unless-stopped
 
   bookstore-api:
@@ -72,7 +86,7 @@ services:
       kafka:
         condition: service_healthy
     restart: unless-stopped
-  
+
   nginx:
     image: nginx:latest
     container_name: bookstore-nginx
@@ -85,5 +99,48 @@ services:
     depends_on:
       - bookstore-api
 
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: bookstore-chromadb
+    ports:
+      - "8000:8000"
+    volumes:
+      - chromadb-data:/chroma/chroma
+    environment:
+      - IS_PERSISTENT=TRUE
+      - ANONYMIZED_TELEMETRY=FALSE
+      - ALLOW_RESET=TRUE
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/api/v2/heartbeat" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  bookstore-nl2sql:
+    build:
+      context: ./bookstore-nl2sql
+      dockerfile: Dockerfile
+    container_name: bookstore-nl2sql
+    ports:
+      - "8001:8001"
+    env_file:
+      - ./bookstore-nl2sql/.env
+    environment:
+      - MODEL_PATH=/app/models/multilingual-e5-large
+      - DB_HOST=bookstore-db
+      - DB_PORT=3306
+      - CHROMA_HOST=chromadb
+      - CHROMA_PORT=8000
+    volumes:
+      - ./models:/app/models
+    depends_on:
+      bookstore-db:
+        condition: service_healthy
+      chromadb:
+        condition: service_healthy
+    restart: unless-stopped
+
 volumes:
   bookstore-db-data:
+  chromadb-data:

@@ -1,0 +1,7 @@
+mysql:
+  host: localhost
+  port: 3306
+  database: bookstore
+  username: bookstore
+  password: 1234
+  charset: utf8mb4

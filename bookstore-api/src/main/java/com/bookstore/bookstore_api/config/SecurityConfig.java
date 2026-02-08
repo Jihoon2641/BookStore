@@ -10,7 +10,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import com.bookstore.bookstore_api.common.filter.RequestLoggingFilter;
 import com.bookstore.bookstore_api.common.security.JwtAuthenticationFilter;
+import com.bookstore.bookstore_api.common.ratelimit.RateLimiterService;
+import com.bookstore.bookstore_api.common.security.BotDetectionService;
+import com.bookstore.bookstore_api.user.application.port.out.UserLogRepository;
 import com.bookstore.bookstore_api.util.jwt.JwtUtil;
 
 import lombok.RequiredArgsConstructor;
@@ -21,6 +25,9 @@ import lombok.RequiredArgsConstructor;
 public class SecurityConfig {
 
     private final JwtUtil jwtUtil;
+    private final RateLimiterService rateLimiterService;
+    private final BotDetectionService botDetectionService;
+    private final UserLogRepository userLogRepository;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -29,6 +36,9 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        JwtAuthenticationFilter jwtFilter = new JwtAuthenticationFilter(jwtUtil);
+        RequestLoggingFilter requestLoggingFilter = new RequestLoggingFilter(rateLimiterService, botDetectionService, userLogRepository);
+
         http
                 .httpBasic(httpBasic -> httpBasic.disable())
                 .csrf(csrf -> csrf.disable())
@@ -38,8 +48,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/user/login", "/api/v1/user/signup", "/api/v1/orders").permitAll()
                         .requestMatchers("/api/v1/books/**").permitAll()
                         .anyRequest().authenticated())
-                .addFilterBefore(new JwtAuthenticationFilter(jwtUtil),
-                        UsernamePasswordAuthenticationFilter.class);
+                // RequestLoggingFilter -> JwtAuthenticationFilter -> UsernamePasswordAuthenticationFilter 순서
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(requestLoggingFilter, JwtAuthenticationFilter.class);
 
         return http.build();
     }
