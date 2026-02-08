@@ -57,3 +57,5 @@ __pycache__/
 *.pyzw
 *.pyzwz
 *.pyzwzw
+
+models/
