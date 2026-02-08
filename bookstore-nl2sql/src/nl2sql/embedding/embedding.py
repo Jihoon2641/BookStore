@@ -27,7 +27,7 @@ class EmbeddingModel:
             self._load_model()
 
     def _load_model(self):
-        model_path = Path("models/multilingual-e5-large")
+        model_path = Path("nl2sql-models/multilingual-e5-large")
 
         if not model_path.exists():
             raise FileNotFoundError(f"모델을 찾을 수 없습니다: {model_path}")

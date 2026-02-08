@@ -58,4 +58,4 @@ __pycache__/
 *.pyzwz
 *.pyzwzw
 
-models/
+nl2sql-models/

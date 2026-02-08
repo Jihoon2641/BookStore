@@ -1,0 +1,156 @@
+{
+    "version": "1.0.0",
+    "last_updated": "2024-02-07",
+    "examples": [
+        {
+            "example_id": "example_001",
+            "question": "재고가 10개 미만인 책은?",
+            "sql": "SELECT id, title, author, stock FROM books WHERE stock < 10",
+            "difficulty": "easy",
+            "explanation": "단순 WHERE 조건으로 재고 필터링",
+            "tables_used": [
+                "books"
+            ],
+            "tags": [
+                "필터링",
+                "단순조회"
+            ]
+        },
+        {
+            "example_id": "example_002",
+            "question": "가장 비싼 책 5권은?",
+            "sql": "SELECT id, title, author, price FROM books ORDER BY price DESC LIMIT 5",
+            "difficulty": "easy",
+            "explanation": "ORDER BY로 가격 내림차순 정렬 후 LIMIT으로 상위 5개",
+            "tables_used": [
+                "books"
+            ],
+            "tags": [
+                "정렬",
+                "LIMIT"
+            ]
+        },
+        {
+            "example_id": "example_003",
+            "question": "출판사별 평균 도서 가격은?",
+            "sql": "SELECT publisher, AVG(price) as avg_price FROM books GROUP BY publisher",
+            "difficulty": "medium",
+            "explanation": "GROUP BY로 출판사별 그룹화 후 AVG 집계",
+            "tables_used": [
+                "books"
+            ],
+            "tags": [
+                "집계",
+                "그룹화"
+            ]
+        },
+        {
+            "example_id": "example_004",
+            "question": "어제 주문한 사용자는?",
+            "sql": "SELECT DISTINCT u.id, u.name, u.email FROM users u JOIN orders o ON u.id = o.user_id WHERE DATE(o.order_date) = DATE_SUB(CURDATE(), INTERVAL 1 DAY)",
+            "difficulty": "medium",
+            "explanation": "JOIN으로 사용자-주문 연결, DATE 함수로 날짜 비교",
+            "tables_used": [
+                "users",
+                "orders"
+            ],
+            "tags": [
+                "조인",
+                "날짜필터"
+            ]
+        },
+        {
+            "example_id": "example_005",
+            "question": "가장 많이 팔린 책 TOP 10은?",
+            "sql": "SELECT b.id, b.title, b.author, SUM(oi.quantity) as total_sold FROM books b JOIN order_items oi ON b.id = oi.book_id GROUP BY b.id, b.title, b.author ORDER BY total_sold DESC LIMIT 10",
+            "difficulty": "hard",
+            "explanation": "JOIN으로 책-주문상품 연결, GROUP BY로 책별 집계, SUM으로 판매량 합산",
+            "tables_used": [
+                "books",
+                "order_items"
+            ],
+            "tags": [
+                "조인",
+                "집계",
+                "정렬",
+                "LIMIT"
+            ]
+        },
+        {
+            "example_id": "example_006",
+            "question": "특정 사용자의 총 주문 금액은?",
+            "sql": "SELECT u.id, u.name, SUM(oi.price * oi.quantity) as total_amount FROM users u JOIN orders o ON u.id = o.user_id JOIN order_items oi ON o.id = oi.order_id WHERE u.id = ? GROUP BY u.id, u.name",
+            "difficulty": "hard",
+            "explanation": "다중 JOIN으로 사용자-주문-주문상품 연결, SUM으로 총액 계산",
+            "tables_used": [
+                "users",
+                "orders",
+                "order_items"
+            ],
+            "tags": [
+                "다중조인",
+                "집계",
+                "파라미터"
+            ]
+        },
+        {
+            "example_id": "example_007",
+            "question": "주문 상태가 PENDING인 주문은?",
+            "sql": "SELECT id, user_id, order_date, status FROM orders WHERE status = 'PENDING'",
+            "difficulty": "easy",
+            "explanation": "ENUM 값으로 상태 필터링",
+            "tables_used": [
+                "orders"
+            ],
+            "tags": [
+                "필터링",
+                "ENUM"
+            ]
+        },
+        {
+            "example_id": "example_008",
+            "question": "이번 달에 생성된 사용자 수는?",
+            "sql": "SELECT COUNT(*) as user_count FROM users WHERE YEAR(created_at) = YEAR(CURDATE()) AND MONTH(created_at) = MONTH(CURDATE())",
+            "difficulty": "medium",
+            "explanation": "날짜 함수로 이번 달 필터링 후 COUNT 집계",
+            "tables_used": [
+                "users"
+            ],
+            "tags": [
+                "집계",
+                "날짜필터"
+            ]
+        },
+        {
+            "example_id": "example_009",
+            "question": "인기 도서 중 재고가 있는 책은?",
+            "sql": "SELECT id, title, author, stock, price FROM books WHERE is_popular = 1 AND stock > 0",
+            "difficulty": "easy",
+            "explanation": "다중 조건 필터링 (인기 도서 + 재고 있음)",
+            "tables_used": [
+                "books"
+            ],
+            "tags": [
+                "필터링",
+                "다중조건"
+            ]
+        },
+        {
+            "example_id": "example_010",
+            "question": "사용자별 주문 횟수 TOP 5는?",
+            "sql": "SELECT u.id, u.name, COUNT(o.id) as order_count FROM users u LEFT JOIN orders o ON u.id = o.user_id GROUP BY u.id, u.name ORDER BY order_count DESC LIMIT 5",
+            "difficulty": "medium",
+            "explanation": "LEFT JOIN으로 주문 없는 사용자도 포함, COUNT로 주문 횟수 집계",
+            "tables_used": [
+                "users",
+                "orders"
+            ],
+            "tags": [
+                "조인",
+                "집계",
+                "정렬",
+                "LIMIT"
+            ]
+        }
+    ]
+}
