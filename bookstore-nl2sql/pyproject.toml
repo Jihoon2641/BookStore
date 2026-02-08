@@ -12,6 +12,9 @@ dependencies = [
     "pymysql (>=1.1.2,<2.0.0)",
     "sqlalchemy (>=2.0.46,<3.0.0)",
     "pyyaml>=6.0.3",
+    "sentence-transformers (>=5.2.2,<6.0.0)",
+    "numpy (>=2.4.2,<3.0.0)",
+    "chromadb (>=1.4.1,<2.0.0)",
 ]
 
 
@@ -25,7 +28,7 @@ packages = [{include = "nl2sql", from = "src"}]
 [dependency-groups]
 dev = [
     "ruff (>=0.15.0,<0.16.0)",
-    "pytest (>=9.0.2,<10.0.0)"
+    "pytest (>=9.0.2,<10.0.0)",
 ]
 
 [tool.ruff]

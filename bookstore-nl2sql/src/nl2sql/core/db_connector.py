@@ -26,10 +26,17 @@ class DBConnector:
         
         self.db_config = config["mysql"]
         
+        import os
+        host = os.getenv("DB_HOST", self.db_config["host"])
+        port = os.getenv("DB_PORT", str(self.db_config["port"]))
+        database = os.getenv("DB_NAME", self.db_config["database"])
+        username = os.getenv("DB_USER", self.db_config["username"])
+        password = os.getenv("DB_PASSWORD", self.db_config["password"])
+
         self.db_url = (
-            f"mysql+pymysql://{self.db_config['username']}:"
-            f"{self.db_config['password']}@{self.db_config['host']}:"
-            f"{self.db_config['port']}/{self.db_config['database']}"
+            f"mysql+pymysql://{username}:"
+            f"{password}@{host}:"
+            f"{port}/{database}"
         )
         
         
