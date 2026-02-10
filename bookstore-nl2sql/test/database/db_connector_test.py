@@ -1,9 +1,11 @@
 """
 DBConnector 테스트
 """
+
 import pytest
 from sqlalchemy import text
-from nl2sql.core.db_connector import DBConnector
+
+from nl2sql.core.database.db_connector import DBConnector
 
 
 @pytest.fixture
@@ -36,7 +38,7 @@ def test_db_connection(db_connector):
         # 간단한 쿼리 실행
         result = session.execute(text("SELECT 1 as num"))
         row = result.fetchone()
-        
+
         assert row is not None
         assert row[0] == 1
 
@@ -47,10 +49,10 @@ def test_multiple_sessions(db_connector):
         with db_connector.get_db() as session2:
             # 두 세션은 서로 다른 객체여야 함
             assert session1 is not session2
-            
+
             # 각각 독립적으로 작동해야 함
             result1 = session1.execute(text("SELECT 1"))
             result2 = session2.execute(text("SELECT 2"))
-            
+
             assert result1.fetchone()[0] == 1
             assert result2.fetchone()[0] == 2

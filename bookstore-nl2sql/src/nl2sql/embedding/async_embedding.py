@@ -1,8 +1,8 @@
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
-from typing import List, Union
-import numpy as np
+
 from .embedding import get_embedding_model
+
 
 class AsyncEmbeddingModel:
     """
@@ -20,18 +20,14 @@ class AsyncEmbeddingModel:
         self.executor = ThreadPoolExecutor(max_workers=max_workers)
         self.model = get_embedding_model()
 
-    async def encode_async(
-        self,
-        texts: Union[str, List[str]],
-        batch_size: int = 32
-    ) -> List[List[float]]:
+    async def encode_async(self, texts: str | list[str], batch_size: int = 32) -> list[list[float]]:
         """
         비동기 임베딩 생성
-        
+
         Args:
             texts: 단일 텍스트 또는 텍스트 리스트
             batch_size: 배치 크기
-            
+
         Returns:
             임베딩 벡터 리스트
         """
@@ -42,23 +38,18 @@ class AsyncEmbeddingModel:
         # ThreadPoolExecutor에서 동기 함수 실행
         loop = asyncio.get_running_loop()
         embeddings = await loop.run_in_executor(
-            self.executor,
-            self.model.encode,
-            texts,
-            batch_size,
-            False,
-            True
+            self.executor, self.model.encode, texts, batch_size, False, True
         )
 
         return embeddings[0].tolist()
 
-    async def encode_single_async(self, text: str) -> List[float]:
+    async def encode_single_async(self, text: str) -> list[float]:
         """
         비동기 단일 텍스트 임베딩
-        
+
         Args:
             text: 단일 텍스트
-            
+
         Returns:
             임베딩 벡터 리스트
         """
@@ -70,8 +61,10 @@ class AsyncEmbeddingModel:
         자원 해제
         """
         self.executor.shutdown(wait=True)
-            
+
+
 _async_embedding_model: AsyncEmbeddingModel = None
+
 
 def get_async_embedding_model() -> AsyncEmbeddingModel:
     """
