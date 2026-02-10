@@ -6,12 +6,13 @@
 3. 사용자가 수동으로 테이블 및 컬럼 설명 입력 해야함
 """
 
-from pathlib import Path
 import json
+from datetime import datetime
+from pathlib import Path
+
 from nl2sql.core.database.db_connector import DBConnector
 from nl2sql.core.database.schema_indexer import SchemaIndexer
 from nl2sql.models.shema import SchemaMetadata
-from datetime import datetime
 
 
 def main():

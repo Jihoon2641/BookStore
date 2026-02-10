@@ -1,8 +1,9 @@
 from ast import Dict
-from typing import List
-from nl2sql.core.database.db_connector import DBConnector
+
 from sqlalchemy import text
-from nl2sql.models.shema import TableSchema, ColumnInfo
+
+from nl2sql.core.database.db_connector import DBConnector
+from nl2sql.models.shema import ColumnInfo, TableSchema
 
 
 class SchemaIndexer:
@@ -20,7 +21,7 @@ class SchemaIndexer:
         """
         self.db_connector = db_connector
 
-    def _get_table_list(self) -> List[str]:
+    def _get_table_list(self) -> list[str]:
         """
         테이블 목록 조회
 
@@ -31,7 +32,7 @@ class SchemaIndexer:
             result = conn.execute(text("SHOW TABLES"))
             return [row[0] for row in result]
 
-    def _get_column_info(self, table_name: str) -> List[Dict]:
+    def _get_column_info(self, table_name: str) -> list[Dict]:
         """
         컬럼 정보 조회
 
@@ -57,7 +58,7 @@ class SchemaIndexer:
                 for column in columns
             ]
 
-    def extract_schema(self) -> List[TableSchema]:
+    def extract_schema(self) -> list[TableSchema]:
         """
         모든 테이블의 스키마 추출
 

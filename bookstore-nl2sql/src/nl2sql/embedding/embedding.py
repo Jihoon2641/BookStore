@@ -6,11 +6,10 @@
 - 배치 처리
 """
 
-from typing import List
-from typing import Union
 from pathlib import Path
-from sentence_transformers import SentenceTransformer
+
 import numpy as np
+from sentence_transformers import SentenceTransformer
 
 
 class EmbeddingModel:
@@ -38,7 +37,7 @@ class EmbeddingModel:
 
     def encode(
         self,
-        texts: Union[str, List[str]],
+        texts: str | list[str],
         batch_size: int = 32,
         show_progress_bar: bool = False,
         normalize_embeddings: bool = False,
@@ -69,7 +68,7 @@ class EmbeddingModel:
 
         return embeddings
 
-    def encode_single(self, text: str) -> List[float]:
+    def encode_single(self, text: str) -> list[float]:
         """
         단일 텍스트를 임베딩 벡터로 변환
 
@@ -82,7 +81,7 @@ class EmbeddingModel:
         embedding = self.encode(text, normalize_embeddings=True)
         return embedding[0].tolist()
 
-    def encode_batch(self, texts: List[str], batch_size: int = 32) -> List[List[float]]:
+    def encode_batch(self, texts: list[str], batch_size: int = 32) -> list[list[float]]:
         """
         배치 텍스트 임베딩
 

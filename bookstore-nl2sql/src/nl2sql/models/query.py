@@ -1,11 +1,11 @@
 from datetime import datetime
+
 from pydantic import BaseModel, Field
-from typing import List, Optional
 
 
 class QueryRequest(BaseModel):
     query: str = Field(..., description="자연어 질문")
-    user_id: Optional[str] = Field(None, description="사용자(관리자) ID")
+    user_id: str | None = Field(None, description="사용자(관리자) ID")
 
 
 class SchemaContext(BaseModel):
@@ -33,11 +33,11 @@ class QueryResponse(BaseModel):
     question: str = Field(..., description="자연어 질문")
     sql: str = Field(..., description="생성된 SQL 쿼리")
     generator_type: str = "rag"
-    confidence: Optional[float] = None
+    confidence: float | None = None
 
     # 검색된 컨텍스트
-    retrieved_schema: List[SchemaContext] = Field(description="검색된 스키마 컨텍스트")
-    retrieved_few_shot: List[FewShotContext] = Field(description="검색된 few-shot 컨텍스트")
+    retrieved_schema: list[SchemaContext] = Field(description="검색된 스키마 컨텍스트")
+    retrieved_few_shot: list[FewShotContext] = Field(description="검색된 few-shot 컨텍스트")
 
     # 메타 정보
     execution_time_ms: int = Field(..., description="실행 시간 (밀리초)")
@@ -45,10 +45,8 @@ class QueryResponse(BaseModel):
 
     # SQL 검증 결과
     validation_passed: bool = Field(default=True, description="SQL 검증 통과 여부")
-    validation_error: Optional[str] = Field(default=None, description="검증 실패 시 오류 메시지")
-    parsed_sql: Optional[str] = Field(
-        default=None, description="파싱 및 포맷팅된 SQL (검증 통과 시)"
-    )
+    validation_error: str | None = Field(default=None, description="검증 실패 시 오류 메시지")
+    parsed_sql: str | None = Field(default=None, description="파싱 및 포맷팅된 SQL (검증 통과 시)")
 
 
 class QueryLog(BaseModel):
@@ -58,6 +56,6 @@ class QueryLog(BaseModel):
     question: str
     sql: str
     generator_type: str
-    confidence: Optional[float] = None
+    confidence: float | None = None
     execution_time_ms: int
-    user_id: Optional[str] = None
+    user_id: str | None = None

@@ -25,11 +25,13 @@
 # # 환경변수 로드
 # load_dotenv()
 
+
 # def print_separator(title: str):
 #     """구분선 출력"""
-#     print("\n" + "="*80)
+#     print("\n" + "=" * 80)
 #     print(f"  {title}")
-#     print("="*80 + "\n")
+#     print("=" * 80 + "\n")
+
 
 # def print_response(response):
 #     """응답 결과를 보기 좋게 출력"""
@@ -48,14 +50,12 @@
 #     print(f"📚 검색된 스키마: {[s.table_name for s in response.retrieved_schema]}")
 #     print(f"💡 검색된 예제: {len(response.retrieved_few_shot)}개")
 
+
 # def test_valid_query():
 #     """테스트 1: 정상 쿼리 생성 및 검증 통과"""
 #     print_separator("테스트 1: 정상 쿼리 생성")
 
-#     processor = QueryProcessor(
-#         open_ai_key=os.getenv("OPENAI_API_KEY"),
-#         enable_validation=True
-#     )
+#     processor = QueryProcessor(open_ai_key=os.getenv("OPENAI_API_KEY"), enable_validation=True)
 
 #     # 정상적인 질문
 #     request = QueryRequest(query="재고가 10개 미만인 책을 조회해줘")
@@ -68,14 +68,12 @@
 
 #     processor.close()
 
+
 # def test_invalid_table():
 #     """테스트 2: 잘못된 테이블명 사용 시 검증 실패"""
 #     print_separator("테스트 2: 잘못된 테이블명 사용")
 
-#     processor = QueryProcessor(
-#         open_ai_key=os.getenv("OPENAI_API_KEY"),
-#         enable_validation=True
-#     )
+#     processor = QueryProcessor(open_ai_key=os.getenv("OPENAI_API_KEY"), enable_validation=True)
 
 #     # 존재하지 않는 테이블을 언급하는 질문
 #     request = QueryRequest(query="invalid_books 테이블에서 데이터를 가져와줘")
@@ -91,14 +89,12 @@
 
 #     processor.close()
 
+
 # def test_missing_semicolon():
 #     """테스트 3: 세미콜론 누락 (LLM이 누락할 가능성 낮음)"""
 #     print_separator("테스트 3: 세미콜론 누락 시나리오")
 
-#     processor = QueryProcessor(
-#         open_ai_key=os.getenv("OPENAI_API_KEY"),
-#         enable_validation=True
-#     )
+#     processor = QueryProcessor(open_ai_key=os.getenv("OPENAI_API_KEY"), enable_validation=True)
 
 #     request = QueryRequest(query="books 테이블의 모든 데이터")
 #     response = processor.process(request)
@@ -109,14 +105,12 @@
 
 #     processor.close()
 
+
 # def test_regeneration():
 #     """테스트 4: 재생성 기능 테스트"""
 #     print_separator("테스트 4: SQL 재생성")
 
-#     processor = QueryProcessor(
-#         open_ai_key=os.getenv("OPENAI_API_KEY"),
-#         enable_validation=True
-#     )
+#     processor = QueryProcessor(open_ai_key=os.getenv("OPENAI_API_KEY"), enable_validation=True)
 
 #     # 첫 시도
 #     print("🔹 1차 시도:")
@@ -143,7 +137,7 @@
 #             error_message=fake_error,
 #             suggestions=fake_suggestions,
 #             schemas=response1.retrieved_schema,
-#             few_shot=response1.retrieved_few_shot
+#             few_shot=response1.retrieved_few_shot,
 #         )
 
 #         print(f"재생성된 SQL: {response2.sql}")
@@ -157,7 +151,7 @@
 #             error_message=response1.validation_error,
 #             suggestions=["수정 제안"],
 #             schemas=response1.retrieved_schema,
-#             few_shot=response1.retrieved_few_shot
+#             few_shot=response1.retrieved_few_shot,
 #         )
 
 #         print_response(response2)
@@ -166,14 +160,12 @@
 
 #     processor.close()
 
+
 # def test_multiple_queries():
 #     """테스트 5: 여러 질문 연속 처리"""
 #     print_separator("테스트 5: 여러 질문 연속 처리")
 
-#     processor = QueryProcessor(
-#         open_ai_key=os.getenv("OPENAI_API_KEY"),
-#         enable_validation=True
-#     )
+#     processor = QueryProcessor(open_ai_key=os.getenv("OPENAI_API_KEY"), enable_validation=True)
 
 #     queries = [
 #         "가장 비싼 책 5권은?",
@@ -192,36 +184,39 @@
 #         print(f"검증: {'✅ 통과' if response.validation_passed else '❌ 실패'}")
 #         print(f"시간: {response.execution_time_ms}ms")
 
-#         results.append({
-#             "query": query,
-#             "sql": response.sql,
-#             "validation_passed": response.validation_passed,
-#             "execution_time_ms": response.execution_time_ms
-#         })
+#         results.append(
+#             {
+#                 "query": query,
+#                 "sql": response.sql,
+#                 "validation_passed": response.validation_passed,
+#                 "execution_time_ms": response.execution_time_ms,
+#             }
+#         )
 
 #     # 결과 요약
-#     print("\n" + "="*80)
+#     print("\n" + "=" * 80)
 #     print("📊 결과 요약")
-#     print("="*80)
+#     print("=" * 80)
 
 #     total = len(results)
 #     passed = sum(1 for r in results if r["validation_passed"])
 #     avg_time = sum(r["execution_time_ms"] for r in results) / total
 
 #     print(f"총 질문: {total}개")
-#     print(f"검증 통과: {passed}개 ({passed/total*100:.1f}%)")
+#     print(f"검증 통과: {passed}개 ({passed / total * 100:.1f}%)")
 #     print(f"평균 처리 시간: {avg_time:.1f}ms")
 
 #     print("\n✅ 테스트 5 완료!")
 
 #     processor.close()
 
+
 # def main():
 #     """모든 테스트 실행"""
 
-#     print("="*80)
+#     print("=" * 80)
 #     print("  NL2SQL QueryProcessor 검증 테스트")
-#     print("="*80)
+#     print("=" * 80)
 
 #     try:
 #         # 각 테스트 실행
@@ -231,14 +226,16 @@
 #         test_regeneration()
 #         test_multiple_queries()
 
-#         print("\n" + "="*80)
+#         print("\n" + "=" * 80)
 #         print("  🎉 모든 테스트 완료!")
-#         print("="*80)
+#         print("=" * 80)
 
 #     except Exception as e:
 #         logger.error(f"테스트 실패: {e}")
 #         import traceback
+
 #         traceback.print_exc()
+
 
 # if __name__ == "__main__":
 #     main()

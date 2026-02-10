@@ -1,5 +1,4 @@
-from typing import List, Optional
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class FewShot(BaseModel):
@@ -8,9 +7,9 @@ class FewShot(BaseModel):
     sql: str = Field(..., description="정답 SQL 쿼리")
     explanation: str = Field(..., description="SQL 설명")
 
-    tables_used: List[str] = Field(default_factory=list, description="사용된 테이블 목록")
-    tags: List[str] = Field(default_factory=list, description="태그 (예: [필터링, 정렬, 집계])")
-    notes: Optional[str] = Field(None, description="추가 설명")
+    tables_used: list[str] = Field(default_factory=list, description="사용된 테이블 목록")
+    tags: list[str] = Field(default_factory=list, description="태그 (예: [필터링, 정렬, 집계])")
+    notes: str | None = Field(None, description="추가 설명")
 
     model_config = ConfigDict(
         json_schema_extra={

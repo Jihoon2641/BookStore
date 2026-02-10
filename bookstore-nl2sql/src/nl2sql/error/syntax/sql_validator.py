@@ -1,13 +1,12 @@
 import sqlparse
+from sqlparse.sql import Identifier, IdentifierList, Statement
+from sqlparse.tokens import DML, Keyword
 
 from nl2sql.models.sql_validation_result import SqlValidationResult
-from typing import List, Optional
-from sqlparse.sql import Statement, Identifier, IdentifierList
-from sqlparse.tokens import DML, Keyword
 
 
 class SQLValidator:
-    def __init__(self, schema_tables: Optional[List[str]] = None):
+    def __init__(self, schema_tables: list[str] | None = None):
         self.schema_tables = set(schema_tables) if schema_tables else set()
 
     def validate(self, sql: str) -> SqlValidationResult:
@@ -92,7 +91,7 @@ class SQLValidator:
             )
         return SqlValidationResult(is_valid=True)
 
-    def _extract_tables(self, statement: Statement) -> List[str]:
+    def _extract_tables(self, statement: Statement) -> list[str]:
         tables = []
         from_seen = False
 

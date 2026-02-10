@@ -2,10 +2,12 @@
 쿼리 처리 테스트 스크립트
 """
 
+import os
+
+from dotenv import load_dotenv
+
 from nl2sql.core.query_processor import QueryProcessor
 from nl2sql.models.query import QueryRequest
-from dotenv import load_dotenv
-import os
 
 load_dotenv()
 
@@ -39,14 +41,14 @@ def main():
         response = processor.process(request)
 
         # 결과 출력
-        print(f"\n생성된 SQL:")
+        print("\n생성된 SQL:")
         print(f"   {response.sql}\n")
 
-        print(f"검색된 스키마:")
+        print("검색된 스키마:")
         for schema in response.retrieved_schema:
             print(f"   - {schema.table_name} (거리: {schema.distance:.4f})")
 
-        print(f"\n검색된 예제:")
+        print("\n검색된 예제:")
         for example in response.retrieved_few_shot:
             print(f"   - {example.question} (거리: {example.distance:.4f})")
 

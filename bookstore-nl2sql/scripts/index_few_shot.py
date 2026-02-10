@@ -2,10 +2,11 @@
 Few-shot 데이터를 ChromaDB에 인덱싱하는 스크립트
 """
 
-from nl2sql.vectordb.chroma_store import ChromaStore
-from nl2sql.embedding.embedding import get_embedding_model
-from pathlib import Path
 import json
+from pathlib import Path
+
+from nl2sql.embedding.embedding import get_embedding_model
+from nl2sql.vectordb.chroma_store import ChromaStore
 
 
 def main():
@@ -17,7 +18,7 @@ def main():
     if not few_shot_example.exists():
         raise FileNotFoundError("few_shot_examples.json 파일이 없습니다.")
 
-    with open(few_shot_example, "r") as f:
+    with open(few_shot_example) as f:
         few_shot_examples = json.load(f)
 
     embedding_model = get_embedding_model()

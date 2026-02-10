@@ -1,7 +1,5 @@
-from typing import Dict
-from typing import List
-import yaml
 import chromadb
+import yaml
 from chromadb.config import Settings
 
 
@@ -16,7 +14,7 @@ class ChromaStore:
             config_path: 벡터 스토어 설정 YAML 파일 경로
         """
 
-        with open(config_path, "r") as f:
+        with open(config_path) as f:
             config = yaml.safe_load(f)
 
         self.chroma_config = config["chroma"]
@@ -73,7 +71,7 @@ class ChromaStore:
         )
 
     def add_schema(
-        self, table_name: str, embedding: List[float], document: str, metadata: Dict
+        self, table_name: str, embedding: list[float], document: str, metadata: dict
     ) -> None:
         """
         스키자 정보 저장
@@ -93,7 +91,7 @@ class ChromaStore:
         )
 
     def add_few_shot(
-        self, example_id: str, embedding: List[float], questions: str, metadata: Dict
+        self, example_id: str, embedding: list[float], questions: str, metadata: dict
     ) -> None:
         """
         few shot 데이터 저장
@@ -112,7 +110,7 @@ class ChromaStore:
             ids=[example_id], embeddings=[embedding], documents=[questions], metadatas=[metadata]
         )
 
-    def search_schema(self, query_embedding: List[float], top_k: int = 3) -> List[Dict]:
+    def search_schema(self, query_embedding: list[float], top_k: int = 3) -> list[dict]:
         """
         스키마 검색
 
@@ -138,7 +136,7 @@ class ChromaStore:
             for i in range(len(results["ids"][0]))
         ]
 
-    def search_few_shot(self, query_embedding: List[float], top_k: int = 3) -> List[Dict]:
+    def search_few_shot(self, query_embedding: list[float], top_k: int = 3) -> list[dict]:
         """
         few shot 데이터 검색
 

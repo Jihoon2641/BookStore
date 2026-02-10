@@ -1,9 +1,9 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
-from typing import Generator
+from collections.abc import Generator
 from contextlib import contextmanager
+
 import yaml
-from loguru import logger
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session, sessionmaker
 
 
 class DBConnector:
@@ -21,7 +21,7 @@ class DBConnector:
             config_path: 데이터베이스 설정 YAML 파일 경로
         """
 
-        with open(config_path, "r") as f:
+        with open(config_path) as f:
             config = yaml.safe_load(f)
 
         self.db_config = config["mysql"]

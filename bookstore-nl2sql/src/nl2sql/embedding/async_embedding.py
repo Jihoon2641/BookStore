@@ -1,7 +1,6 @@
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
-from typing import List, Union
-import numpy as np
+
 from .embedding import get_embedding_model
 
 
@@ -21,9 +20,7 @@ class AsyncEmbeddingModel:
         self.executor = ThreadPoolExecutor(max_workers=max_workers)
         self.model = get_embedding_model()
 
-    async def encode_async(
-        self, texts: Union[str, List[str]], batch_size: int = 32
-    ) -> List[List[float]]:
+    async def encode_async(self, texts: str | list[str], batch_size: int = 32) -> list[list[float]]:
         """
         비동기 임베딩 생성
 
@@ -46,7 +43,7 @@ class AsyncEmbeddingModel:
 
         return embeddings[0].tolist()
 
-    async def encode_single_async(self, text: str) -> List[float]:
+    async def encode_single_async(self, text: str) -> list[float]:
         """
         비동기 단일 텍스트 임베딩
 

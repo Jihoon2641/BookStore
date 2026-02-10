@@ -5,10 +5,11 @@
 - ChromaDB에 저장
 """
 
-from nl2sql.vectordb.chroma_store import ChromaStore
-from nl2sql.embedding.embedding import get_embedding_model
-from pathlib import Path
 import json
+from pathlib import Path
+
+from nl2sql.embedding.embedding import get_embedding_model
+from nl2sql.vectordb.chroma_store import ChromaStore
 
 
 def format_columns_for_search(columns: list) -> str:
@@ -37,7 +38,7 @@ def main():
         print("스키마 파일이 존재하지 않습니다.")
         return
 
-    with open(schema_path, "r", encoding="utf-8") as f:
+    with open(schema_path, encoding="utf-8") as f:
         schema_metadata = json.load(f)
 
     embedding_model = get_embedding_model()

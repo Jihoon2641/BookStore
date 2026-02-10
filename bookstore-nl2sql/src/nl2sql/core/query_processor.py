@@ -9,23 +9,21 @@
 6. 최종 결과 반환
 """
 
-from langchain_core.output_parsers import PydanticOutputParser
-from nl2sql.error.syntax.sql_validator import SQLValidator
-from nl2sql.models.sql_validation_result import SqlValidationResult
-from typing import Optional
-from nl2sql.models.query import SchemaContext, QueryResponse, FewShotContext, QueryRequest
-from typing import Tuple, Dict, List
-from nl2sql.core.prompt.prompt_template import PromptTemplate
-from nl2sql.vectordb.chroma_store import ChromaStore
-from openai import OpenAI
-from nl2sql.embedding.embedding import get_embedding_model
 import time
 from datetime import datetime
-from sqlalchemy import text
-from nl2sql.models.llm_output import SQLOutput
-from nl2sql.core.database.db_connector import DBConnector
 
+from langchain_core.output_parsers import PydanticOutputParser
 from loguru import logger
+from openai import OpenAI
+from sqlalchemy import text
+
+from nl2sql.core.database.db_connector import DBConnector
+from nl2sql.core.prompt.prompt_template import PromptTemplate
+from nl2sql.embedding.embedding import get_embedding_model
+from nl2sql.error.syntax.sql_validator import SQLValidator
+from nl2sql.models.llm_output import SQLOutput
+from nl2sql.models.query import FewShotContext, QueryRequest, QueryResponse, SchemaContext
+from nl2sql.vectordb.chroma_store import ChromaStore
 
 
 class QueryProcessor:
@@ -64,7 +62,7 @@ class QueryProcessor:
             logger.error(f"SQL 검증기 초기화 실패: {e}")
             self.validator = None
 
-    def _search_schema(self, question: str, top_k: int = 3) -> List[Dict]:
+    def _search_schema(self, question: str, top_k: int = 3) -> list[dict]:
         """
         질문과 관련된 스키마 검색
 
@@ -80,7 +78,7 @@ class QueryProcessor:
         results = self.chroma.search_schema(query_embedding, top_k=top_k)
         return results
 
-    def _search_few_shot(self, question: str, top_k: int = 5) -> List[Dict]:
+    def _search_few_shot(self, question: str, top_k: int = 5) -> list[dict]:
         """
         질문과 관련된 Few-shot 예제 검색
 
@@ -97,8 +95,8 @@ class QueryProcessor:
         return results
 
     def _build_prompt(
-        self, question: str, schemas: List[Dict], few_shot: List[Dict]
-    ) -> Tuple[str, str]:
+        self, question: str, schemas: list[dict], few_shot: list[dict]
+    ) -> tuple[str, str]:
         """
         LLM 호출을 위한 프롬프트 구성
 
@@ -158,7 +156,7 @@ class QueryProcessor:
 
             return SQLOutput(sql=raw_output)
 
-    def _validate_sql(self, sql: str) -> Tuple[bool, Optional[str], Optional[str], List[str]]:
+    def _validate_sql(self, sql: str) -> tuple[bool, str | None, str | None, list[str]]:
         """
         SQL 검증
 
@@ -249,9 +247,9 @@ class QueryProcessor:
         original_request: QueryRequest,
         previous_sql: str,
         error_message: str,
-        suggestions: List[str],
-        schemas: List[Dict],
-        few_shot: List[Dict],
+        suggestions: list[str],
+        schemas: list[dict],
+        few_shot: list[dict],
     ) -> QueryResponse:
         """
         SQL 재생성

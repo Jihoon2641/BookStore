@@ -1,6 +1,5 @@
 # src/nl2sql/core/prompt/prompt_template.py
 
-from typing import List
 import json
 
 
@@ -21,7 +20,7 @@ class PromptTemplate:
 """
 
     @staticmethod
-    def format_schema_context(schemas: List) -> str:
+    def format_schema_context(schemas: list) -> str:
         """검색된 스키마를 프롬프트용 텍스트로 변환"""
         if not schemas:
             return "사용 가능한 스키마가 없습니다."
@@ -67,7 +66,7 @@ class PromptTemplate:
         return "\n".join(lines)
 
     @staticmethod
-    def format_few_shot_context(examples: List) -> str:
+    def format_few_shot_context(examples: list) -> str:
         """검색된 예제를 프롬프트용 텍스트로 변환"""
         if not examples:
             return "참고할 예제가 없습니다."
@@ -133,7 +132,7 @@ class PromptTemplate:
         few_shot: str,
         previous_sql: str,
         error_message: str,
-        suggestions: List[str],
+        suggestions: list[str],
         format_instructions: str,
     ) -> str:
         """
