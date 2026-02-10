@@ -5,7 +5,7 @@ description = ""
 authors = [
     {name = "조지훈",email = "dev.jihoon2641@gmail.com"}
 ]
-requires-python = ">=3.11"
+requires-python = ">=3.11,<4.0"
 dependencies = [
     "pydantic (>=2.12.5,<3.0.0)",
     "loguru (==0.7.0)",
@@ -16,6 +16,8 @@ dependencies = [
     "numpy (>=2.4.2,<3.0.0)",
     "chromadb (>=1.4.1,<2.0.0)",
     "openai (>=2.17.0,<3.0.0)",
+    "sqlparse (>=0.5.5,<0.6.0)",
+    "langchain (>=1.2.9,<2.0.0)",
 ]
 
 
