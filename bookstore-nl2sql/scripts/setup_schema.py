@@ -8,8 +8,8 @@
 
 from pathlib import Path
 import json
-from nl2sql.core.db_connector import DBConnector
-from nl2sql.core.schema_indexer import SchemaIndexer
+from nl2sql.core.database.db_connector import DBConnector
+from nl2sql.core.database.schema_indexer import SchemaIndexer
 from nl2sql.models.shema import SchemaMetadata
 from datetime import datetime
 

@@ -3,7 +3,7 @@ DBConnector 테스트
 """
 import pytest
 from sqlalchemy import text
-from nl2sql.core.db_connector import DBConnector
+from nl2sql.core.database.db_connector import DBConnector
 
 
 @pytest.fixture

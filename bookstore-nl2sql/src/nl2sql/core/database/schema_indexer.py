@@ -1,6 +1,6 @@
 from ast import Dict
 from typing import List
-from nl2sql.core.db_connector import DBConnector
+from nl2sql.core.database.db_connector import DBConnector
 from sqlalchemy import text
 from nl2sql.models.shema import TableSchema, ColumnInfo
 

@@ -36,6 +36,11 @@ class QueryResponse(BaseModel):
     execution_time_ms: int = Field(..., description="실행 시간 (밀리초)")
     timestamp: datetime = Field(default_factory=datetime.now)
 
+    # SQL 검증 결과
+    validation_passed: bool = Field(default=True, description="SQL 검증 통과 여부")
+    validation_error: Optional[str] = Field(default=None, description="검증 실패 시 오류 메시지")
+    parsed_sql: Optional[str] = Field(default=None, description="파싱 및 포맷팅된 SQL (검증 통과 시)")
+
 class QueryLog(BaseModel):
     """쿼리 로그"""
     timestamp: str
