@@ -4,6 +4,7 @@ from nl2sql.core.database.db_connector import DBConnector
 from sqlalchemy import text
 from nl2sql.models.shema import TableSchema, ColumnInfo
 
+
 class SchemaIndexer:
     """
     스키마 인덱서
@@ -52,9 +53,10 @@ class SchemaIndexer:
                     "key": column[3] if column[3] else None,
                     "default": column[4],
                     "extra": column[5] if column[5] else None,
-                } for column in columns
+                }
+                for column in columns
             ]
-    
+
     def extract_schema(self) -> List[TableSchema]:
         """
         모든 테이블의 스키마 추출
@@ -62,28 +64,19 @@ class SchemaIndexer:
         Returns:
             List[TableSchema]: 테이블 스키마 목록
         """
-        
+
         tables = self._get_table_list()
         schemas = []
 
         for table_name in tables:
-
             columns_data = self._get_column_info(table_name)
 
-            columns = [
-                ColumnInfo(
-                    **col_data,
-                    description_ko=""
-                ) for col_data in columns_data
-            ]
+            columns = [ColumnInfo(**col_data, description_ko="") for col_data in columns_data]
 
             schema = TableSchema(
-                table_name=table_name,
-                columns=columns,
-                description_ko="",
-                foreign_keys=[]
+                table_name=table_name, columns=columns, description_ko="", foreign_keys=[]
             )
 
             schemas.append(schema)
-        
+
         return schemas

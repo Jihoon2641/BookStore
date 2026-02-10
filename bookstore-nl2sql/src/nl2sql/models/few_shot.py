@@ -1,8 +1,8 @@
 from typing import List, Optional
 from pydantic import BaseModel, Field, ConfigDict
 
-class FewShot(BaseModel):
 
+class FewShot(BaseModel):
     example_id: str = Field(..., description="예제 고유 ID")
     question: str = Field(..., description="자연어 질문")
     sql: str = Field(..., description="정답 SQL 쿼리")
@@ -21,7 +21,7 @@ class FewShot(BaseModel):
                 "explanation": "WHERE 절로 재고 조건 필터링",
                 "tables_used": ["books"],
                 "tags": ["필터링", "단순조회"],
-                "notes": "재고가 10개 미만인 책을 조회하는 예제"
+                "notes": "재고가 10개 미만인 책을 조회하는 예제",
             }
         }
     )

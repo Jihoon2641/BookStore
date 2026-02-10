@@ -4,6 +4,7 @@ import yaml
 import chromadb
 from chromadb.config import Settings
 
+
 class ChromaStore:
     """
     ChromaDB 벡터 스토어 관리 클래스
@@ -14,13 +15,14 @@ class ChromaStore:
         Args:
             config_path: 벡터 스토어 설정 YAML 파일 경로
         """
-        
+
         with open(config_path, "r") as f:
             config = yaml.safe_load(f)
 
         self.chroma_config = config["chroma"]
 
         import os
+
         host = os.getenv("CHROMA_HOST", self.chroma_config["host"])
         port = os.getenv("CHROMA_PORT", str(self.chroma_config["port"]))
 
@@ -30,7 +32,7 @@ class ChromaStore:
             settings=Settings(
                 anonymized_telemetry=False,
                 allow_reset=True,
-            )
+            ),
         )
 
         self.schema_collection = None
@@ -39,7 +41,7 @@ class ChromaStore:
     def init_schema_collection(self, reset: bool = False):
         """
         스키마 컬렉션 초기화
-        
+
         Args:
             reset: 기존 컬렉션 삭제 여부
         """
@@ -50,14 +52,13 @@ class ChromaStore:
                 print(f"컬렉션 삭제 실패: {e}")
 
         self.schema_collection = self.chroma_client.get_or_create_collection(
-            name="schema_store",
-            metadata={"description": "데이터베이스 스키마 정보"}
+            name="schema_store", metadata={"description": "데이터베이스 스키마 정보"}
         )
-    
+
     def init_few_shot_collection(self, reset: bool = False):
         """
         few shot 컬렉션 초기화
-        
+
         Args:
             reset: 기존 컬렉션 삭제 여부
         """
@@ -68,16 +69,11 @@ class ChromaStore:
                 print(f"컬렉션 삭제 실패: {e}")
 
         self.few_shot_collection = self.chroma_client.get_or_create_collection(
-            name="few_shot_store",
-            metadata={"description": "few shot 데이터"}
+            name="few_shot_store", metadata={"description": "few shot 데이터"}
         )
 
     def add_schema(
-        self,
-        table_name: str,
-        embedding: List[float],
-        document: str,
-        metadata: Dict
+        self, table_name: str, embedding: List[float], document: str, metadata: Dict
     ) -> None:
         """
         스키자 정보 저장
@@ -88,23 +84,16 @@ class ChromaStore:
             document: 스키마 정보
             metadata: 메타데이터
         """
-        
+
         if self.schema_collection is None:
             raise ValueError("스키마 컬렉션이 초기화되지 않았습니다.")
-        
+
         self.schema_collection.add(
-            ids=[table_name],
-            embeddings=[embedding],
-            documents=[document],
-            metadatas=[metadata]
+            ids=[table_name], embeddings=[embedding], documents=[document], metadatas=[metadata]
         )
 
     def add_few_shot(
-        self,
-        example_id: str,
-        embedding: List[float],
-        questions: str,
-        metadata: Dict
+        self, example_id: str, embedding: List[float], questions: str, metadata: Dict
     ) -> None:
         """
         few shot 데이터 저장
@@ -120,17 +109,10 @@ class ChromaStore:
             raise ValueError("few shot 컬렉션이 초기화되지 않았습니다.")
 
         self.few_shot_collection.add(
-            ids=[example_id],
-            embeddings=[embedding],
-            documents=[questions],
-            metadatas=[metadata]
+            ids=[example_id], embeddings=[embedding], documents=[questions], metadatas=[metadata]
         )
 
-    def search_schema(
-        self,
-        query_embedding: List[float],
-        top_k: int = 3
-    ) -> List[Dict]:
+    def search_schema(self, query_embedding: List[float], top_k: int = 3) -> List[Dict]:
         """
         스키마 검색
 
@@ -143,27 +125,20 @@ class ChromaStore:
         """
         if self.schema_collection is None:
             raise ValueError("스키마 컬렉션이 초기화되지 않았습니다.")
-        
-        results = self.schema_collection.query(
-            query_embeddings=[query_embedding],
-            n_results=top_k
-        )
+
+        results = self.schema_collection.query(query_embeddings=[query_embedding], n_results=top_k)
 
         return [
             {
                 "table_name": results["ids"][0][i],
                 "document": results["documents"][0][i],
                 "metadata": results["metadatas"][0][i],
-                "distance": results["distances"][0][i]
+                "distance": results["distances"][0][i],
             }
             for i in range(len(results["ids"][0]))
         ]
 
-    def search_few_shot(
-        self,
-        query_embedding: List[float],
-        top_k: int = 3
-    ) -> List[Dict]:
+    def search_few_shot(self, query_embedding: List[float], top_k: int = 3) -> List[Dict]:
         """
         few shot 데이터 검색
 
@@ -178,8 +153,7 @@ class ChromaStore:
             raise ValueError("few shot 컬렉션이 초기화되지 않았습니다.")
 
         results = self.few_shot_collection.query(
-            query_embeddings=[query_embedding],
-            n_results=top_k
+            query_embeddings=[query_embedding], n_results=top_k
         )
 
         return [
@@ -187,7 +161,7 @@ class ChromaStore:
                 "example_id": results["ids"][0][i],
                 "question": results["documents"][0][i],
                 "metadata": results["metadatas"][0][i],
-                "distance": results["distances"][0][i]
+                "distance": results["distances"][0][i],
             }
             for i in range(len(results["ids"][0]))
         ]

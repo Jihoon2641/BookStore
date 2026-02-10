@@ -1,9 +1,9 @@
 """
-임베딩 생성 
+임베딩 생성
 
 - sentenceTransformer 모델 로드 로드 및 관리
 - 텍스트 -> 벡터 변환
-- 배치 처리 
+- 배치 처리
 """
 
 from typing import List
@@ -12,8 +12,8 @@ from pathlib import Path
 from sentence_transformers import SentenceTransformer
 import numpy as np
 
-class EmbeddingModel:
 
+class EmbeddingModel:
     _instance = None
     _model = None
 
@@ -36,20 +36,22 @@ class EmbeddingModel:
 
         self._model.save(str(model_path))
 
-    def encode(self, 
-    texts: Union[str, List[str]], 
-    batch_size: int = 32, 
-    show_progress_bar: bool = False, 
-    normalize_embeddings: bool = False) -> np.ndarray:
+    def encode(
+        self,
+        texts: Union[str, List[str]],
+        batch_size: int = 32,
+        show_progress_bar: bool = False,
+        normalize_embeddings: bool = False,
+    ) -> np.ndarray:
         """
         텍스트를 임베딩 벡터로 변환
-        
+
         Args:
             texts: 단일 텍스트 또는 텍스트 리스트
             batch_size: 배치 크기
             show_progress_bar: 진행 바 표시 여부
             normalize_embeddings: L2 정규화 여부
-            
+
         Returns:
             임베딩 벡터 (shape: [n, dim])
         """
@@ -62,7 +64,7 @@ class EmbeddingModel:
             batch_size=batch_size,
             show_progress_bar=show_progress_bar,
             normalize_embeddings=normalize_embeddings,
-            convert_to_numpy=True
+            convert_to_numpy=True,
         )
 
         return embeddings
@@ -70,10 +72,10 @@ class EmbeddingModel:
     def encode_single(self, text: str) -> List[float]:
         """
         단일 텍스트를 임베딩 벡터로 변환
-        
+
         Args:
             text: 단일 텍스트
-            
+
         Returns:
             임베딩 벡터
         """
@@ -83,18 +85,17 @@ class EmbeddingModel:
     def encode_batch(self, texts: List[str], batch_size: int = 32) -> List[List[float]]:
         """
         배치 텍스트 임베딩
-        
+
         Args:
             texts: 텍스트 리스트
             batch_size: 배치 크기
-            
+
         Returns:
             임베딩 벡터 리스트
         """
         embeddings = self.encode(texts, batch_size=batch_size, show_progress_bar=len(texts) > 10)
         return embeddings.tolist()
 
-    
     @property
     def dimension(self) -> int:
         """
@@ -102,7 +103,9 @@ class EmbeddingModel:
         """
         return self._model.get_sentence_embedding_dimension()
 
+
 _embedding_model: EmbeddingModel = None
+
 
 def get_embedding_model() -> EmbeddingModel:
     """

@@ -25,9 +25,9 @@ class PromptTemplate:
         """검색된 스키마를 프롬프트용 텍스트로 변환"""
         if not schemas:
             return "사용 가능한 스키마가 없습니다."
-        
+
         lines = ["**사용 가능한 테이블 스키마:**\n"]
-        
+
         for schema in schemas:
             if isinstance(schema, dict):
                 table_name = schema["table_name"]
@@ -43,10 +43,10 @@ class PromptTemplate:
 
             columns = json.loads(columns_raw) if isinstance(columns_raw, str) else columns_raw
             foreign_keys = json.loads(fk_raw) if isinstance(fk_raw, str) else fk_raw
-            
+
             lines.append(f"### {table_name} ({description})")
             lines.append("컬럼:")
-            
+
             for col in columns:
                 nullable = "NULL 가능" if col.get("nullable") else "NOT NULL"
                 key_info = f" [{col['key']}]" if col.get("key") else ""
@@ -54,26 +54,26 @@ class PromptTemplate:
                     f"  - {col['name']}: {col.get('description_ko', col.get('description', ''))} "
                     f"({col['type']}, {nullable}{key_info})"
                 )
-            
+
             if foreign_keys:
                 lines.append("외래키:")
                 for fk in foreign_keys:
                     lines.append(
                         f"  - {fk['column_name']} → {fk['referenced_table']}.{fk['referenced_column']}"
                     )
-            
+
             lines.append("")
-        
+
         return "\n".join(lines)
-    
+
     @staticmethod
     def format_few_shot_context(examples: List) -> str:
         """검색된 예제를 프롬프트용 텍스트로 변환"""
         if not examples:
             return "참고할 예제가 없습니다."
-        
+
         lines = ["**참고 예제:**\n"]
-        
+
         for i, example in enumerate(examples, 1):
             if isinstance(example, dict):
                 question = example["question"]
@@ -84,34 +84,31 @@ class PromptTemplate:
                 question = getattr(example, "question", "")
                 sql = getattr(example, "sql", "")
                 explanation = getattr(example, "explanation", "")
-            
+
             lines.append(f"예제 {i}:")
             lines.append(f"질문: {question}")
             lines.append(f"SQL: {sql}")
             lines.append(f"설명: {explanation}")
             lines.append("")
-        
+
         return "\n".join(lines)
 
     @staticmethod
     def build_user_prompt(
-        question: str, 
-        schemas: str,
-        few_shot: str,
-        format_instructions: str
+        question: str, schemas: str, few_shot: str, format_instructions: str
     ) -> str:
         """
         일반 사용자 질문 프롬프트 생성
-        
+
         Args:
             question: 자연어 질문
             schemas: 포맷된 스키마 텍스트
             few_shot: 포맷된 예제 텍스트
             format_instructions: 출력 형식 지시사항
-            
+
         Returns:
             포맷된 프롬프트 텍스트
-        """    
+        """
         return f"""
 {schemas}
 
@@ -137,11 +134,11 @@ class PromptTemplate:
         previous_sql: str,
         error_message: str,
         suggestions: List[str],
-        format_instructions: str
+        format_instructions: str,
     ) -> str:
         """
         재생성용 프롬프트 (오류 피드백 포함)
-        
+
         Args:
             question: 원본 자연어 질문
             schemas: 포맷된 스키마 텍스트
@@ -150,13 +147,13 @@ class PromptTemplate:
             error_message: 검증 오류 메시지
             suggestions: 수정 제안 사항 리스트
             format_instructions: 출력 형식 지시사항
-            
+
         Returns:
             오류 피드백이 포함된 재생성 프롬프트
         """
-        
+
         suggestions_text = "\n".join([f"  - {s}" for s in suggestions])
-        
+
         return f"""
 {schemas}
 

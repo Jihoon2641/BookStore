@@ -27,19 +27,14 @@ from nl2sql.core.database.db_connector import DBConnector
 
 from loguru import logger
 
-class QueryProcessor:
 
+class QueryProcessor:
     def __init__(
-        self,
-        open_ai_key: str = None,
-        model: str = "gpt-4o-mini",
-        enable_validation: bool = True
+        self, open_ai_key: str = None, model: str = "gpt-4o-mini", enable_validation: bool = True
     ):
         self.chroma = ChromaStore()
         self.embedding_model = get_embedding_model()
-        self.llm = OpenAI(
-            api_key=open_ai_key
-        )
+        self.llm = OpenAI(api_key=open_ai_key)
         self.model = model
         self.enable_validation = enable_validation
         self.prompt_template = PromptTemplate()
@@ -76,11 +71,11 @@ class QueryProcessor:
         Args:
             question: 자연어 질문
             top_k: 검색할 스키마 개수
-            
+
         Returns:
             검색된 스키마 리스트
         """
-        
+
         query_embedding = self.embedding_model.encode_single(question)
         results = self.chroma.search_schema(query_embedding, top_k=top_k)
         return results
@@ -92,20 +87,17 @@ class QueryProcessor:
         Args:
             question: 자연어 질문
             top_k: 검색할 예제 개수
-            
+
         Returns:
             검색된 예제 리스트
         """
-        
+
         query_embedding = self.embedding_model.encode_single(question)
         results = self.chroma.search_few_shot(query_embedding, top_k=top_k)
         return results
 
     def _build_prompt(
-        self,
-        question: str,
-        schemas: List[Dict],
-        few_shot: List[Dict]
+        self, question: str, schemas: List[Dict], few_shot: List[Dict]
     ) -> Tuple[str, str]:
         """
         LLM 호출을 위한 프롬프트 구성
@@ -114,11 +106,11 @@ class QueryProcessor:
             question: 자연어 질문
             schemas: 검색된 스키마 리스트
             few_shot: 검색된 Few-shot 예제 리스트
-            
+
         Returns:
             (프롬프트, 시스템 메시지)
         """
-        
+
         schema_context = self.prompt_template.format_schema_context(schemas)
         few_shot_context = self.prompt_template.format_few_shot_context(few_shot)
 
@@ -129,7 +121,7 @@ class QueryProcessor:
             question=question,
             schemas=schema_context,
             few_shot=few_shot_context,
-            format_instructions=format_instructions
+            format_instructions=format_instructions,
         )
 
         return user_prompt, system_prompt
@@ -141,16 +133,16 @@ class QueryProcessor:
         Args:
             system_prompt: 시스템 메시지
             user_prompt: 사용자 메시지
-            
+
         Returns:
             LLM 응답
         """
-        
+
         response = self.llm.chat.completions.create(
             model=self.model,
             messages=[
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
+                {"role": "user", "content": user_prompt},
             ],
             temperature=0.1,
         )
@@ -169,37 +161,29 @@ class QueryProcessor:
     def _validate_sql(self, sql: str) -> Tuple[bool, Optional[str], Optional[str], List[str]]:
         """
         SQL 검증
-        
+
         Args:
             sql: 검증할 SQL 쿼리
-            
+
         Returns:
             (검증 통과 여부, 오류 메시지, 파싱된 SQL, 수정 제안)
         """
-        
+
         if not self.enable_validation or not self.validator:
             logger.warning("SQL 검증기가 초기화 되지 않았습니다. 검증을 수행하지 않습니다.")
             return True, None, sql, []
-        
+
         validation_result = self.validator.validate(sql)
 
         if validation_result.is_valid:
             logger.info("SQL 검증 성공")
-            return True, None, validation_result.parsed_sql, []     
+            return True, None, validation_result.parsed_sql, []
         else:
             logger.warning("SQL 검증 실패: %s", validation_result.error_message)
-            return (
-                False,
-                validation_result.error_message,
-                sql,
-                validation_result.suggestion
-            )
+            return (False, validation_result.error_message, sql, validation_result.suggestion)
 
     def process(
-        self,
-        request: QueryRequest,
-        schema_top_k: int = 3,
-        few_shot_top_k: int = 2
+        self, request: QueryRequest, schema_top_k: int = 3, few_shot_top_k: int = 2
     ) -> QueryResponse:
         """
         전체 쿼리 처리 워크플로우
@@ -208,7 +192,7 @@ class QueryProcessor:
             request: 쿼리 요청
             schema_top_k: 검색할 스키마 개수
             few_shot_top_k: 검색할 예제 개수
-            
+
         Returns:
             쿼리 응답
         """
@@ -219,11 +203,9 @@ class QueryProcessor:
         few_shot = self._search_few_shot(request.query, top_k=few_shot_top_k)
 
         user_prompt, system_prompt = self._build_prompt(
-            question=request.query,
-            schemas=schemas,
-            few_shot=few_shot
+            question=request.query, schemas=schemas, few_shot=few_shot
         )
-        
+
         sql_output = self._call_llm(system_prompt, user_prompt)
         sql = sql_output.sql
 
@@ -242,22 +224,24 @@ class QueryProcessor:
                     description=s["metadata"]["description"],
                     columns=s["metadata"]["columns"],
                     foreign_keys=s["metadata"]["foreign_keys"],
-                    distance=s["distance"]
-                ) for s in schemas
+                    distance=s["distance"],
+                )
+                for s in schemas
             ],
             retrieved_few_shot=[
                 FewShotContext(
                     question=f["question"],
                     sql=f["metadata"]["sql"],
                     explanation=f["metadata"]["explanation"],
-                    distance=f["distance"]
-                ) for f in few_shot
+                    distance=f["distance"],
+                )
+                for f in few_shot
             ],
             execution_time_ms=int((end_time - start_time) * 1000),
             timestamp=datetime.now(),
             validation_passed=is_valid,
             validation_error=error_message,
-            parsed_sql=parsed_sql
+            parsed_sql=parsed_sql,
         )
 
     def regenerate_sql(
@@ -267,7 +251,7 @@ class QueryProcessor:
         error_message: str,
         suggestions: List[str],
         schemas: List[Dict],
-        few_shot: List[Dict]
+        few_shot: List[Dict],
     ) -> QueryResponse:
         """
         SQL 재생성
@@ -279,13 +263,13 @@ class QueryProcessor:
             suggestions: 제안된 SQL 리스트
             schemas: 검색된 스키마 리스트
             few_shot: 검색된 Few-shot 예제 리스트
-            
+
         Returns:
             쿼리 응답
         """
 
         start_time = time.time()
-        
+
         schema_context = self.prompt_template.format_schema_context(schemas)
         few_shot_context = self.prompt_template.format_few_shot_context(few_shot)
         format_instructions = self.output_parser.get_format_instructions()
@@ -297,7 +281,7 @@ class QueryProcessor:
             format_instructions=format_instructions,
             previous_sql=previous_sql,
             error_message=error_message,
-            suggestions=suggestions
+            suggestions=suggestions,
         )
 
         system_prompt = self.prompt_template.SYSTEM_PROMPT
@@ -317,25 +301,33 @@ class QueryProcessor:
             retrieved_schema=[
                 SchemaContext(
                     table_name=s["table_name"] if isinstance(s, dict) else s.table_name,
-                    description=s["metadata"]["description"] if isinstance(s, dict) else s.description,
+                    description=s["metadata"]["description"]
+                    if isinstance(s, dict)
+                    else s.description,
                     columns=s["metadata"]["columns"] if isinstance(s, dict) else s.columns,
-                    foreign_keys=s["metadata"]["foreign_keys"] if isinstance(s, dict) else s.foreign_keys,
-                    distance=s["distance"] if isinstance(s, dict) else s.distance
-                ) for s in schemas
+                    foreign_keys=s["metadata"]["foreign_keys"]
+                    if isinstance(s, dict)
+                    else s.foreign_keys,
+                    distance=s["distance"] if isinstance(s, dict) else s.distance,
+                )
+                for s in schemas
             ],
             retrieved_few_shot=[
                 FewShotContext(
                     question=f["question"] if isinstance(f, dict) else f.question,
                     sql=f["metadata"]["sql"] if isinstance(f, dict) else f.sql,
-                    explanation=f["metadata"]["explanation"] if isinstance(f, dict) else f.explanation,
-                    distance=f["distance"] if isinstance(f, dict) else f.distance
-                ) for f in few_shot
+                    explanation=f["metadata"]["explanation"]
+                    if isinstance(f, dict)
+                    else f.explanation,
+                    distance=f["distance"] if isinstance(f, dict) else f.distance,
+                )
+                for f in few_shot
             ],
             execution_time_ms=int((end_time - start_time) * 1000),
             timestamp=datetime.now(),
             validation_passed=is_valid,
             validation_error=error_message,
-            parsed_sql=parsed_sql
+            parsed_sql=parsed_sql,
         )
 
     def close(self):

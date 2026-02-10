@@ -2,27 +2,34 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 from typing import List, Optional
 
+
 class QueryRequest(BaseModel):
     query: str = Field(..., description="자연어 질문")
     user_id: Optional[str] = Field(None, description="사용자(관리자) ID")
 
+
 class SchemaContext(BaseModel):
     """검색된 스키마 정보"""
+
     table_name: str = Field(..., description="테이블 이름")
     description: str = Field(..., description="테이블 설명")
     columns: str = Field(..., description="컬럼 정보, JSON 형식")
     foreign_keys: str = Field(..., description="외래키 정보, JSON 형식")
     distance: float = Field(..., description="유사도")
 
+
 class FewShotContext(BaseModel):
     """few-shot 정보"""
+
     question: str = Field(..., description="자연어 질문")
     sql: str = Field(..., description="정답 SQL 쿼리")
     explanation: str = Field(..., description="SQL 설명")
     distance: float = Field(..., description="유사도")
 
+
 class QueryResponse(BaseModel):
     """쿼리 처리 결과"""
+
     question: str = Field(..., description="자연어 질문")
     sql: str = Field(..., description="생성된 SQL 쿼리")
     generator_type: str = "rag"
@@ -39,10 +46,14 @@ class QueryResponse(BaseModel):
     # SQL 검증 결과
     validation_passed: bool = Field(default=True, description="SQL 검증 통과 여부")
     validation_error: Optional[str] = Field(default=None, description="검증 실패 시 오류 메시지")
-    parsed_sql: Optional[str] = Field(default=None, description="파싱 및 포맷팅된 SQL (검증 통과 시)")
+    parsed_sql: Optional[str] = Field(
+        default=None, description="파싱 및 포맷팅된 SQL (검증 통과 시)"
+    )
+
 
 class QueryLog(BaseModel):
     """쿼리 로그"""
+
     timestamp: str
     question: str
     sql: str
