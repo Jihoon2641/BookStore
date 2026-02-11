@@ -32,8 +32,9 @@ class QueryResponse(BaseModel):
 
     question: str = Field(..., description="자연어 질문")
     sql: str = Field(..., description="생성된 SQL 쿼리")
-    generator_type: str = "rag"
-    confidence: float | None = None
+    generator_type: str = Field(..., description="생성기 타입")
+    confidence: float | None = Field(None, description="생성 신뢰도")
+    explanation: str | None = Field(None, description="SQL 설명")
 
     # 검색된 컨텍스트
     retrieved_schema: list[SchemaContext] = Field(description="검색된 스키마 컨텍스트")
