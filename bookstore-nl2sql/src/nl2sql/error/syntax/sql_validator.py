@@ -1,15 +1,17 @@
+from sqlalchemy import text
 import sqlparse
 from sqlparse.sql import Identifier, IdentifierList, Statement
 from sqlparse.tokens import DML, Keyword
 
 from nl2sql.models.sql_validation_result import SqlValidationResult
-
+from sqlalchemy.orm import Session
+from sqlalchemy.exc import ProgrammingError, OperationalError
 
 class SQLValidator:
     def __init__(self, schema_tables: list[str] | None = None):
         self.schema_tables = set(schema_tables) if schema_tables else set()
 
-    def validate(self, sql: str) -> SqlValidationResult:
+    def validate(self, sql: str, session: Session | None = None) -> SqlValidationResult:
         """SQL 문법 검증"""
 
         # 1. 빈 쿼리
@@ -71,6 +73,12 @@ class SQLValidator:
             if not table_validation.is_valid:
                 return table_validation
 
+        # 컬럼 존재 여부 및 데이터 타입 불일치 검증
+        if session:
+            explain_result = self._validate_with_explain(formatted_sql, session)
+            if not explain_result.is_valid:
+                return explain_result
+
         return SqlValidationResult(is_valid=True, parsed_sql=formatted_sql)
 
     def _is_select_query(self, statement: Statement) -> bool:
@@ -112,3 +120,47 @@ class SQLValidator:
                 from_seen = True
 
         return tables
+
+    def _validate_with_explain(self, sql: str, session: Session) -> SqlValidationResult:
+        clean_sql = sql.rstrip().rstrip(";")
+
+        try:
+            session.execute(text(f"EXPLAIN {clean_sql}"))
+            return SqlValidationResult(is_valid=True, parsed_sql=sql)
+        except OperationalError as e:
+            error_msg = str(e.orig) if hasattr(e, "orig") else str(e)
+            suggestion = self._build_explain_suggestion(error_msg)
+            return SqlValidationResult(
+                is_valid=False,
+                error_message=f"[EXPLAIN 검증 실패] {error_msg}",
+                suggestion=suggestion,
+                parsed_sql=sql,
+            )
+        except ProgrammingError as e:
+            error_msg = str(e.orig) if hasattr(e, "orig") else str(e)
+            suggestion = self._build_explain_suggestion(error_msg)
+            return SqlValidationResult(
+                is_valid=False,
+                error_message=f"[EXPLAIN 검증 실패] {error_msg}",
+                suggestion=suggestion,
+                parsed_sql=sql,
+            )
+
+    def _build_explain_suggestion(self, error_msg: str) -> list[str]:
+        suggestions = []
+        error_lower = error_msg.lower()
+
+        if "unknown column" in error_lower:
+            suggestions.append("존재하지 않는 컬럼이 사용되었습니다. 스키마의 실제 컬럼명을 확인해주세요.")
+        elif "truncated incorrect" in error_lower or "incorrect" in error_lower:
+            suggestions.append(
+                "데이터 타입이 일치하지 않습니다. "
+                "WHERE 절이나 함수 인자의 타입을 확인하세요. "
+                "(예: 문자열 컬럼에 숫자 비교, 날짜 컬럼에 잘못된 형식)"
+            )
+        elif "doesn't exist" in error_lower:
+            suggestions.append("존재하지 않는 테이블이 사용되었습니다. 스키마의 실제 테이블명을 확인해주세요.")
+        else:
+            suggestions.append(f"[EXPLAIN] 실행 중 오류가 발생했습니다. {error_msg}")
+        
+        return suggestions

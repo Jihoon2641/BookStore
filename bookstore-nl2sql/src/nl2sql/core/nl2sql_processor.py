@@ -58,7 +58,6 @@ class NL2SQLProcessor:
             sql=result["sql"],
             generator_type="RAG",
             confidence=None,
-            # Pydantic 모델로 명시적 변환
             retrieved_schema=[
                 SchemaContext(
                     table_name=s["table_name"],

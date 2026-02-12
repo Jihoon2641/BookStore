@@ -23,7 +23,9 @@ def create_syntax_validator(db_connector: DBConnector):
     @chain
     def validate_syntax(input_data):
         sql = input_data['sql']
-        validation_result = validator.validate(sql)
+
+        with db_connector.get_db() as session:
+            validation_result = validator.validate(sql, session=session)
 
         return {
             **input_data,

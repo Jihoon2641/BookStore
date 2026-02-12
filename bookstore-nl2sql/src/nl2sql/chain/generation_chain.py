@@ -1,5 +1,5 @@
 import json
-from langchain_core.runnables import RunnableLambda
+from langchain_core.runnables import chain
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_openai import ChatOpenAI
@@ -40,6 +40,7 @@ def create_generation_chain(llm_model: str, openai_key: str):
         """)
     ])
     
+    @chain
     def generate_and_convert(input_data):
         """
         SQL 생성 및 딕셔너리 변환
@@ -76,7 +77,7 @@ def create_generation_chain(llm_model: str, openai_key: str):
             'explanation': sql_output.explanation
         }
     
-    return RunnableLambda(generate_and_convert)
+    return generate_and_convert
 
 def format_schemas(schemas):
     """스키마를 읽기 쉬운 텍스트로 변환"""
@@ -92,7 +93,6 @@ def format_schemas(schemas):
         
         lines.append(f"### {table_name} ({description})")
         
-        # 컬럼 정보
         columns_raw = metadata.get("columns", "[]")
         columns = json.loads(columns_raw) if isinstance(columns_raw, str) else columns_raw
         
@@ -138,6 +138,6 @@ def format_few_shot(examples):
         lines.append(f"SQL: {sql}")
         if explanation:
             lines.append(f"설명: {explanation}")
-        lines.append("")  # 빈 줄
+        lines.append("")
     
     return "\n".join(lines)
