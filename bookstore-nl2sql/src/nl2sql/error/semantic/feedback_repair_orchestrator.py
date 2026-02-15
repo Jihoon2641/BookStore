@@ -1,4 +1,3 @@
-from sqlalchemy import text
 from langchain_core.runnables import RunnableLambda
 
 from nl2sql.common.sql_parser import extract_tables_from_sql
@@ -33,18 +32,13 @@ class FeedbackRepairOrchestrator:
         self.classifier = FeedbackClassifier(openai_key=openai_key, model=model)
         self.refiner = FeedbackSQLRefiner(openai_key=openai_key, model=model)
         self.db_connector = DBConnector()
-        self.validator = SQLValidator(self._get_table_names())
+        self.validator = SQLValidator(self.db_connector.get_table_names())
         self.few_shot_store = FewShotJsonStore(few_shot_path) if few_shot_path else None
         self.pipeline = (
             RunnableLambda(self._classify_step)
             | RunnableLambda(self._repair_with_retry_step)
             | RunnableLambda(self._finalize_step)
         )
-
-    def _get_table_names(self) -> list[str]:
-        with self.db_connector.get_db() as session:
-            result = session.execute(text("SHOW TABLES"))
-            return [row[0] for row in result]
 
     def repair(self, request: FeedbackRequest) -> FeedbackRepairResult:
         return self.pipeline.invoke({"request": request})

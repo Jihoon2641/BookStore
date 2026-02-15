@@ -15,7 +15,6 @@ from datetime import datetime
 from langchain_core.output_parsers import PydanticOutputParser
 from loguru import logger
 from openai import OpenAI
-from sqlalchemy import text
 
 from nl2sql.core.database.db_connector import DBConnector
 from nl2sql.core.prompt.prompt_template import PromptTemplate
@@ -54,10 +53,7 @@ class QueryProcessor:
         SQL 검증기 초기화
         """
         try:
-            with self.db_connector.get_db() as session:
-                result = session.execute(text("SHOW TABLES"))
-                tables = [row[0] for row in result]
-                self.validator = SQLValidator(tables)
+            self.validator = SQLValidator(self.db_connector.get_table_names())
         except Exception as e:
             logger.error(f"SQL 검증기 초기화 실패: {e}")
             self.validator = None
