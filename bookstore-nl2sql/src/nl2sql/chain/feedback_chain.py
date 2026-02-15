@@ -11,11 +11,7 @@ def create_feedback_chain(
     model: str,
 ):
     feedback = Feedback(few_shot_path)
-    feedback_repair_orchestrator = FeedbackRepairOrchestrator(
-        few_shot_path=few_shot_path,
-        openai_key=openai_key,
-        model=model,
-    )
+    feedback_repair_orchestrator: FeedbackRepairOrchestrator | None = None
 
     def _to_feedback_request(raw) -> FeedbackRequest | None:
         if raw is None:
@@ -34,6 +30,7 @@ def create_feedback_chain(
         return model_obj
 
     def _feedback_step(payload: dict) -> dict:
+        nonlocal feedback_repair_orchestrator
         feedback_request = _to_feedback_request(payload.get("feedback_request"))
 
         if feedback_request is None:
@@ -47,6 +44,13 @@ def create_feedback_chain(
                 **payload,
                 "feedback_processed": False,
             }
+
+        if feedback_repair_orchestrator is None:
+            feedback_repair_orchestrator = FeedbackRepairOrchestrator(
+                few_shot_path=few_shot_path,
+                openai_key=openai_key,
+                model=model,
+            )
 
         repair_result = feedback_repair_orchestrator.repair(feedback_request)
         return {

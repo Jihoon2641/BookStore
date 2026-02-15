@@ -1,15 +1,32 @@
-from sqlalchemy import text
-import sqlparse
-from sqlparse.sql import Identifier, IdentifierList, Statement
-from sqlparse.tokens import DML, Keyword
+import difflib
+import json
+import re
 
-from nl2sql.models.sql_validation_result import SqlValidationResult
+import sqlparse
+from sqlalchemy import text
+from sqlalchemy.exc import OperationalError, ProgrammingError
 from sqlalchemy.orm import Session
-from sqlalchemy.exc import ProgrammingError, OperationalError
+from sqlparse.sql import Statement
+from sqlparse.tokens import DML
+
+from nl2sql.common.sql_parser import extract_table_aliases_from_statement
+from nl2sql.embedding.embedding import get_embedding_model
+from nl2sql.models.sql_validation_result import SqlValidationResult
+from nl2sql.vectordb.chroma_store import ChromaStore
 
 class SQLValidator:
     def __init__(self, schema_tables: list[str] | None = None):
         self.schema_tables = set(schema_tables) if schema_tables else set()
+        self._embedding_model = None
+        self._chroma = None
+        self._schema_cache: dict[str, dict] = {}
+
+    def _init_schema_search(self) -> None:
+        if self._embedding_model is not None and self._chroma is not None:
+            return
+        self._embedding_model = get_embedding_model()
+        self._chroma = ChromaStore()
+        self._chroma.init_schema_collection(reset=False)
 
     def validate(self, sql: str, session: Session | None = None) -> SqlValidationResult:
         """SQL 문법 검증"""
@@ -57,21 +74,18 @@ class SQLValidator:
                 suggestion=["SELECT 문을 입력해주세요."],
             )
 
-        # 세미콜론 확인
         formatted_sql = sqlparse.format(sql.strip(), reindent=True, keyword_case="upper")
-        if not formatted_sql.rstrip().endswith(";"):
-            return SqlValidationResult(
-                is_valid=False,
-                error_message="SQL 쿼리가 세미콜론으로 끝나지 않습니다.",
-                parsed_sql=formatted_sql + ";",
-                suggestion=["SQL 쿼리의 끝에 세미콜론(;)을 추가해주세요."],
-            )
 
-        # 테이블 존재 여부 검증
+        # 세미콜론 보정
+        formatted_sql = self._ensure_semicolon(formatted_sql)
+        statement = sqlparse.parse(formatted_sql)[0]
+
+        # 테이블/컬럼 환각 보정
         if self.schema_tables:
-            table_validation = self._validate_tables(statement)
-            if not table_validation.is_valid:
-                return table_validation
+            formatted_sql, statement = self._auto_rewrite_schema_hallucination(
+                formatted_sql,
+                statement,
+            )
 
         # 컬럼 존재 여부 및 데이터 타입 불일치 검증
         if session:
@@ -81,45 +95,129 @@ class SQLValidator:
 
         return SqlValidationResult(is_valid=True, parsed_sql=formatted_sql)
 
+    # SELECT 문 검증
     def _is_select_query(self, statement: Statement) -> bool:
         first_token = statement.token_first(skip_ws=True, skip_cm=True)
         if first_token and first_token.ttype is DML:
             return first_token.value.upper() == "SELECT"
         return False
 
-    def _validate_tables(self, statement: Statement) -> SqlValidationResult:
-        tables_in_query = self._extract_tables(statement)
-        invalid_tables = [t for t in tables_in_query if t not in self.schema_tables]
+    # 세미콜론 보정
+    def _ensure_semicolon(self, sql: str) -> str:
+        fixed = sql.strip()
+        if not fixed.endswith(";"):
+            fixed += ";"
+        return fixed
 
-        if invalid_tables:
-            return SqlValidationResult(
-                is_valid=False,
-                error_message=f"존재하지 않는 테이블이 포함되어 있습니다: {', '.join(invalid_tables)}",
-                suggestion=[f"사용 가능한 테이블 = {', '.join(sorted(self.schema_tables))}"],
+    # 테이블/컬럼 환각 보정
+    def _auto_rewrite_schema_hallucination(
+        self,
+        sql: str,
+        statement: Statement,
+    ) -> tuple[str, Statement]:
+        rewritten_sql = sql
+        table_alias_map = extract_table_aliases_from_statement(statement)
+
+        for alias, table_name in list(table_alias_map.items()):
+            if table_name in self.schema_tables:
+                continue
+            replacement = self._semantic_table_match(table_name)
+            if not replacement or replacement == table_name:
+                continue
+            rewritten_sql = self._replace_table_identifier(rewritten_sql, table_name, replacement)
+            table_alias_map[alias] = replacement
+
+        reparsed = sqlparse.parse(rewritten_sql)
+        if reparsed:
+            statement = reparsed[0]
+            table_alias_map = extract_table_aliases_from_statement(statement)
+
+        qualified_refs = re.findall(
+            r"\b([A-Za-z_][A-Za-z0-9_]*)\s*\.\s*([A-Za-z_][A-Za-z0-9_]*)\b",
+            rewritten_sql,
+        )
+        for qualifier, column_name in qualified_refs:
+            table_name = table_alias_map.get(qualifier)
+            if not table_name or table_name not in self.schema_tables:
+                continue
+
+            valid_columns = self._get_table_columns(table_name)
+            if not valid_columns or column_name in valid_columns:
+                continue
+
+            replacement = self._closest_column(column_name, valid_columns)
+            if not replacement or replacement == column_name:
+                continue
+
+            rewritten_sql = self._replace_qualified_column(
+                rewritten_sql,
+                qualifier=qualifier,
+                old_column=column_name,
+                new_column=replacement,
             )
-        return SqlValidationResult(is_valid=True)
 
-    def _extract_tables(self, statement: Statement) -> list[str]:
-        tables = []
-        from_seen = False
+        reparsed = sqlparse.parse(rewritten_sql)
+        if reparsed:
+            return rewritten_sql, reparsed[0]
+        return rewritten_sql, statement
 
-        for token in statement.tokens:
-            if from_seen:
-                if isinstance(token, IdentifierList):
-                    for identifier in token.get_identifiers():
-                        tables.append(identifier.get_real_name())
-                elif isinstance(token, Identifier):
-                    tables.append(token.get_real_name())
+    # 테이블 식별자 교체
+    def _replace_table_identifier(self, sql: str, old_table: str, new_table: str) -> str:
+        pattern = re.compile(rf"\b{re.escape(old_table)}\b", re.IGNORECASE)
+        return pattern.sub(new_table, sql)
 
-                from_seen = False
+    # 한정된 컬럼 교체
+    def _replace_qualified_column(
+        self,
+        sql: str,
+        qualifier: str,
+        old_column: str,
+        new_column: str,
+    ) -> str:
+        pattern = re.compile(
+            rf"\b{re.escape(qualifier)}\s*\.\s*{re.escape(old_column)}\b",
+            re.IGNORECASE,
+        )
+        return pattern.sub(f"{qualifier}.{new_column}", sql)
 
-            if token.ttype is Keyword and token.value.upper() == "FROM":
-                from_seen = True
+    def _semantic_table_match(self, table_name: str) -> str | None:
+        try:
+            self._init_schema_search()
+            query_embedding = self._embedding_model.encode_single(table_name)
+            results = self._chroma.search_schema(query_embedding, top_k=1)
+            if not results:
+                return None
+            return results[0]["table_name"]
+        except Exception:
+            return None
 
-            if token.ttype is Keyword and "JOIN" in token.value.upper():
-                from_seen = True
+    def _get_table_columns(self, table_name: str) -> set[str]:
+        if table_name in self._schema_cache:
+            return set(self._schema_cache[table_name].get("columns", []))
 
-        return tables
+        try:
+            self._init_schema_search()
+            query_embedding = self._embedding_model.encode_single(table_name)
+            results = self._chroma.search_schema(query_embedding, top_k=1)
+            if not results:
+                self._schema_cache[table_name] = {"columns": []}
+                return set()
+
+            metadata = results[0].get("metadata", {})
+            raw_columns = metadata.get("columns", "[]")
+            columns_obj = json.loads(raw_columns) if isinstance(raw_columns, str) else raw_columns
+            columns = [c.get("name") for c in columns_obj if isinstance(c, dict) and c.get("name")]
+            self._schema_cache[table_name] = {"columns": columns}
+            return set(columns)
+        except Exception:
+            self._schema_cache[table_name] = {"columns": []}
+            return set()
+
+    def _closest_column(self, column_name: str, candidates: set[str]) -> str | None:
+        if not candidates:
+            return None
+        matches = difflib.get_close_matches(column_name, list(candidates), n=1, cutoff=0.0)
+        return matches[0] if matches else None
 
     def _validate_with_explain(self, sql: str, session: Session) -> SqlValidationResult:
         clean_sql = sql.rstrip().rstrip(";")

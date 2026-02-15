@@ -3,6 +3,7 @@ from pathlib import Path
 
 from nl2sql.models.feedback import FeedbackRepairResult, FeedbackRequest, FeedbackResponse
 from nl2sql.chain.feedback_chain import create_feedback_chain
+from nl2sql.error.semantic.feedback_repair_orchestrator import FeedbackRepairOrchestrator
 from nl2sql.models.query import QueryResponse, QueryRequest, SchemaContext, FewShotContext
 from nl2sql.chain.retry_chain import create_retry_chain
 from nl2sql.chain.validation_chain import create_validation_chain
@@ -21,6 +22,8 @@ class NL2SQLProcessor:
         model: str,
         few_shot_path: str = "data/metadata/few_shot.json",
     ):
+        self.openai_key = openai_key
+        self.model = model
         self.chroma = ChromaStore()
         self.embedding_model = get_embedding_model()
         self.db_connector = DBConnector()
@@ -122,4 +125,10 @@ class NL2SQLProcessor:
         불만족 피드백 기반 SQL 교정
         흐름: 분류 -> 재생성 -> SQL 검증(재시도) -> 성공 시 few-shot 저장
         """
+        if self.feedback_repair is None:
+            self.feedback_repair = FeedbackRepairOrchestrator(
+                few_shot_path=self.few_shot_path,
+                openai_key=self.openai_key,
+                model=self.model,
+            )
         return self.feedback_repair.repair(request)
