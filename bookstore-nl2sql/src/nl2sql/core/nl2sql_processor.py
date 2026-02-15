@@ -1,4 +1,9 @@
 from datetime import datetime
+from pathlib import Path
+
+from nl2sql.models.feedback import FeedbackRepairResult, FeedbackRequest, FeedbackResponse
+from nl2sql.chain.feedback_chain import create_feedback_chain
+from nl2sql.error.semantic.feedback_repair_orchestrator import FeedbackRepairOrchestrator
 from nl2sql.models.query import QueryResponse, QueryRequest, SchemaContext, FewShotContext
 from nl2sql.chain.retry_chain import create_retry_chain
 from nl2sql.chain.validation_chain import create_validation_chain
@@ -11,10 +16,18 @@ import time
 
 class NL2SQLProcessor:
     
-    def __init__(self, openai_key: str, model: str):
+    def __init__(
+        self,
+        openai_key: str,
+        model: str,
+        few_shot_path: str = "data/metadata/few_shot.json",
+    ):
+        self.openai_key = openai_key
+        self.model = model
         self.chroma = ChromaStore()
         self.embedding_model = get_embedding_model()
         self.db_connector = DBConnector()
+        self.few_shot_path = str(Path(few_shot_path))
 
         self.chroma.init_schema_collection(reset=False)
         self.chroma.init_few_shot_collection(reset=False)
@@ -38,23 +51,39 @@ class NL2SQLProcessor:
             self.validation_chain
         )
 
+        self.feedback, self.feedback_repair, self.feedback_chain = create_feedback_chain(
+            few_shot_path=self.few_shot_path,
+            openai_key=openai_key,
+            model=model,
+        )
+        
         self.pipeline = (
             self.retrieval_chain
             | self.generation_chain
             | self.validation_chain
             | self.retry_chain
+            | self.feedback_chain
         )
 
-    def process(self, request: QueryRequest) -> QueryResponse:
+    def process(
+        self,
+        request: QueryRequest,
+        feedback_request: FeedbackRequest | dict | None = None,
+    ) -> QueryResponse:
 
         start_time = time.time()
 
-        result = self.pipeline.invoke({"query": request.query})
+        result = self.pipeline.invoke(
+            {
+                "query": request.query,
+                "feedback_request": feedback_request,
+            }
+        )
 
         end_time = time.time()
 
         return QueryResponse(
-            question=request.query,
+            query=request.query,
             sql=result["sql"],
             generator_type="RAG",
             confidence=None,
@@ -70,7 +99,7 @@ class NL2SQLProcessor:
             ],
             retrieved_few_shot=[
                 FewShotContext(
-                    question=f["question"],
+                    query=f["query"],
                     sql=f["metadata"]["sql"],
                     explanation=f["metadata"]["explanation"],
                     distance=f["distance"]
@@ -84,3 +113,22 @@ class NL2SQLProcessor:
             validation_error=result.get("error_message"),
             parsed_sql=result.get("parsed_sql")
         )
+
+    def handle_feedback(self, request: FeedbackRequest) -> FeedbackResponse:
+        """
+        사용자 만족/불만족 피드백 수집 및 few-shot 적재 처리
+        """
+        return self.feedback.handle(request)
+
+    def repair_from_feedback(self, request: FeedbackRequest) -> FeedbackRepairResult:
+        """
+        불만족 피드백 기반 SQL 교정
+        흐름: 분류 -> 재생성 -> SQL 검증(재시도) -> 성공 시 few-shot 저장
+        """
+        if self.feedback_repair is None:
+            self.feedback_repair = FeedbackRepairOrchestrator(
+                few_shot_path=self.few_shot_path,
+                openai_key=self.openai_key,
+                model=self.model,
+            )
+        return self.feedback_repair.repair(request)

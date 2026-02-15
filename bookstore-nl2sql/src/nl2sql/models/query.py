@@ -21,7 +21,7 @@ class SchemaContext(BaseModel):
 class FewShotContext(BaseModel):
     """few-shot 정보"""
 
-    question: str = Field(..., description="자연어 질문")
+    query: str = Field(..., description="자연어 질문")
     sql: str = Field(..., description="정답 SQL 쿼리")
     explanation: str = Field(..., description="SQL 설명")
     distance: float = Field(..., description="유사도")
@@ -30,7 +30,7 @@ class FewShotContext(BaseModel):
 class QueryResponse(BaseModel):
     """쿼리 처리 결과"""
 
-    question: str = Field(..., description="자연어 질문")
+    query: str = Field(..., description="자연어 질문")
     sql: str = Field(..., description="생성된 SQL 쿼리")
     generator_type: str = Field(..., description="생성기 타입")
     confidence: float | None = Field(None, description="생성 신뢰도")
@@ -54,7 +54,7 @@ class QueryLog(BaseModel):
     """쿼리 로그"""
 
     timestamp: str
-    question: str
+    query: str
     sql: str
     generator_type: str
     confidence: float | None = None

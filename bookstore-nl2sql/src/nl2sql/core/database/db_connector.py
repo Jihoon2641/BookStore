@@ -2,7 +2,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 
 import yaml
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 
 
@@ -71,3 +71,11 @@ class DBConnector:
         Engine 종료 및 모든 커넥션 반환
         """
         self.engine.dispose()
+
+    def get_table_names(self) -> list[str]:
+        """
+        현재 데이터베이스의 테이블 목록 조회
+        """
+        with self.get_db() as session:
+            result = session.execute(text("SHOW TABLES"))
+            return [row[0] for row in result]

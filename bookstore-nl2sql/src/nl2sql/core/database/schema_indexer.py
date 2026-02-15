@@ -28,9 +28,7 @@ class SchemaIndexer:
         Returns:
             List[str]: 테이블 목록
         """
-        with self.db_connector.get_db() as conn:
-            result = conn.execute(text("SHOW TABLES"))
-            return [row[0] for row in result]
+        return self.db_connector.get_table_names()
 
     def _get_column_info(self, table_name: str) -> list[Dict]:
         """

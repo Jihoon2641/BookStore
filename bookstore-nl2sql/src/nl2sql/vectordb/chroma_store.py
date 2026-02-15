@@ -91,7 +91,7 @@ class ChromaStore:
         )
 
     def add_few_shot(
-        self, example_id: str, embedding: list[float], questions: str, metadata: dict
+        self, example_id: str, embedding: list[float], query: str, metadata: dict
     ) -> None:
         """
         few shot 데이터 저장
@@ -99,7 +99,7 @@ class ChromaStore:
         Args:
             example_id: 예제 고유 ID
             embedding: 임베딩 벡터
-            questions: 자연어 질문
+            query: 자연어 질문
             metadata: 메타데이터
         """
 
@@ -107,7 +107,7 @@ class ChromaStore:
             raise ValueError("few shot 컬렉션이 초기화되지 않았습니다.")
 
         self.few_shot_collection.add(
-            ids=[example_id], embeddings=[embedding], documents=[questions], metadatas=[metadata]
+            ids=[example_id], embeddings=[embedding], documents=[query], metadatas=[metadata]
         )
 
     def search_schema(self, query_embedding: list[float], top_k: int = 3) -> list[dict]:
@@ -157,7 +157,7 @@ class ChromaStore:
         return [
             {
                 "example_id": results["ids"][0][i],
-                "question": results["documents"][0][i],
+                "query": results["documents"][0][i],
                 "metadata": results["metadatas"][0][i],
                 "distance": results["distances"][0][i],
             }
