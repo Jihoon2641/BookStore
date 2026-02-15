@@ -1,9 +1,9 @@
 import os
 
 from langchain_core.output_parsers import PydanticOutputParser
-from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 
+from nl2sql.core.prompt.feedback_prompt import create_feedback_classification_prompt
 from nl2sql.models.feedback import (
     FeedbackClassificationResult,
     FeedbackRequest,
@@ -28,28 +28,7 @@ class FeedbackClassifier:
         self.output_parser = PydanticOutputParser(
             pydantic_object=FeedbackClassificationResult
         )
-        self.prompt = ChatPromptTemplate.from_messages([
-            (
-                "system",
-                "당신은 NL2SQL 피드백 분류기다. 사용자 피드백을 주어진 스키마 형식으로 분류해라.",
-            ),
-            (
-                "user",
-                "[질문]\n{query}\n\n"
-                "[현재 SQL]\n{sql}\n\n"
-                "[사용자 불만족 피드백]\n{feedback_text}\n\n"
-                "분류 후보:\n"
-                "- OUTPUT_SHAPE_ERROR\n"
-                "- INTENT_MISMATCH\n"
-                "- SCOPE_FILTER_ERROR\n"
-                "- RELATION_AGG_ERROR\n\n"
-                "규칙:\n"
-                "1) issue_type은 후보 중 정확히 하나\n"
-                "2) issue_reason은 한국어 1~2문장\n"
-                "3) confidence는 0~1 실수\n\n"
-                "{format_instructions}",
-            ),
-        ])
+        self.prompt = create_feedback_classification_prompt()
         self.chain = self.prompt | self.llm | self.output_parser
 
     def classify(self, request: FeedbackRequest) -> FeedbackClassificationResult:
