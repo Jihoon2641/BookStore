@@ -34,14 +34,14 @@ def main():
 
     for example in examples:
         example_id = example["example_id"]
-        question = example["question"]
+        query = example.get("query", example.get("question", ""))
         sql = example["sql"]
         explanation = example["explanation"]
         tables_used = example.get("tables_used", [])
         tags = example.get("tags", [])
         notes = example.get("notes", "")
 
-        embedding = embedding_model.encode_single(question)
+        embedding = embedding_model.encode_single(query)
 
         metadata = {
             "sql": sql,
@@ -52,7 +52,7 @@ def main():
         }
 
         chroma.add_few_shot(
-            example_id=example_id, embedding=embedding, questions=question, metadata=metadata
+            example_id=example_id, embedding=embedding, query=query, metadata=metadata
         )
 
     print("Few-shot 데이터 인덱싱이 완료되었습니다.")
@@ -62,7 +62,7 @@ def main():
     results = chroma.search_few_shot(query_embedding, top_k=3)
 
     for i, result in enumerate(results, 1):
-        print(f"\n{i}. [{result['metadata']}] {result['question']}")
+        print(f"\n{i}. [{result['metadata']}] {result['query']}")
         print(f"   거리: {result['distance']:.4f}")
         print(f"   SQL: {result['metadata']['sql'][:80]}...")
         print(f"   설명: {result['metadata']['explanation']}")
