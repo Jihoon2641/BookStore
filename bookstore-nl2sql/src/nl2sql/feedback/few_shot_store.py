@@ -26,7 +26,7 @@ class FewShotJsonStore:
     def append_example(
         self,
         example_id: str,
-        question: str,
+        query: str,
         sql: str,
         explanation: str,
         tables_used: list[str],
@@ -34,7 +34,7 @@ class FewShotJsonStore:
         data = self.load()
         new_example = {
             "example_id": example_id,
-            "question": question,
+            "query": query,
             "sql": sql,
             "explanation": explanation,
             "tables_used": tables_used,

@@ -62,46 +62,46 @@ class QueryProcessor:
             logger.error(f"SQL 검증기 초기화 실패: {e}")
             self.validator = None
 
-    def _search_schema(self, question: str, top_k: int = 3) -> list[dict]:
+    def _search_schema(self, query: str, top_k: int = 3) -> list[dict]:
         """
         질문과 관련된 스키마 검색
 
         Args:
-            question: 자연어 질문
+            query: 자연어 질문
             top_k: 검색할 스키마 개수
 
         Returns:
             검색된 스키마 리스트
         """
 
-        query_embedding = self.embedding_model.encode_single(question)
+        query_embedding = self.embedding_model.encode_single(query)
         results = self.chroma.search_schema(query_embedding, top_k=top_k)
         return results
 
-    def _search_few_shot(self, question: str, top_k: int = 5) -> list[dict]:
+    def _search_few_shot(self, query: str, top_k: int = 5) -> list[dict]:
         """
         질문과 관련된 Few-shot 예제 검색
 
         Args:
-            question: 자연어 질문
+            query: 자연어 질문
             top_k: 검색할 예제 개수
 
         Returns:
             검색된 예제 리스트
         """
 
-        query_embedding = self.embedding_model.encode_single(question)
+        query_embedding = self.embedding_model.encode_single(query)
         results = self.chroma.search_few_shot(query_embedding, top_k=top_k)
         return results
 
     def _build_prompt(
-        self, question: str, schemas: list[dict], few_shot: list[dict]
+        self, query: str, schemas: list[dict], few_shot: list[dict]
     ) -> tuple[str, str]:
         """
         LLM 호출을 위한 프롬프트 구성
 
         Args:
-            question: 자연어 질문
+            query: 자연어 질문
             schemas: 검색된 스키마 리스트
             few_shot: 검색된 Few-shot 예제 리스트
 
@@ -116,7 +116,7 @@ class QueryProcessor:
 
         system_prompt = self.prompt_template.SYSTEM_PROMPT
         user_prompt = self.prompt_template.build_user_prompt(
-            question=question,
+            query=query,
             schemas=schema_context,
             few_shot=few_shot_context,
             format_instructions=format_instructions,
@@ -201,7 +201,7 @@ class QueryProcessor:
         few_shot = self._search_few_shot(request.query, top_k=few_shot_top_k)
 
         user_prompt, system_prompt = self._build_prompt(
-            question=request.query, schemas=schemas, few_shot=few_shot
+            query=request.query, schemas=schemas, few_shot=few_shot
         )
 
         sql_output = self._call_llm(system_prompt, user_prompt)
@@ -212,7 +212,7 @@ class QueryProcessor:
         end_time = time.time()
 
         return QueryResponse(
-            question=request.query,
+            query=request.query,
             sql=sql,
             generator_type="RAG",
             confidence=None,
@@ -228,7 +228,7 @@ class QueryProcessor:
             ],
             retrieved_few_shot=[
                 FewShotContext(
-                    question=f["question"],
+                    query=f["query"],
                     sql=f["metadata"]["sql"],
                     explanation=f["metadata"]["explanation"],
                     distance=f["distance"],
@@ -273,7 +273,7 @@ class QueryProcessor:
         format_instructions = self.output_parser.get_format_instructions()
 
         user_prompt = self.prompt_template.build_retry_prompt(
-            question=original_request.query,
+            query=original_request.query,
             schemas=schema_context,
             few_shot=few_shot_context,
             format_instructions=format_instructions,
@@ -292,7 +292,7 @@ class QueryProcessor:
         end_time = time.time()
 
         return QueryResponse(
-            question=original_request.query,
+            query=original_request.query,
             sql=sql,
             generator_type="RAG",
             confidence=None,
@@ -312,7 +312,7 @@ class QueryProcessor:
             ],
             retrieved_few_shot=[
                 FewShotContext(
-                    question=f["question"] if isinstance(f, dict) else f.question,
+                    query=f["query"] if isinstance(f, dict) else f.query,
                     sql=f["metadata"]["sql"] if isinstance(f, dict) else f.sql,
                     explanation=f["metadata"]["explanation"]
                     if isinstance(f, dict)

@@ -1,10 +1,10 @@
 from loguru import logger
 
+from nl2sql.common.sql_parser import extract_tables_from_sql
 from nl2sql.models.feedback import FeedbackRequest, FeedbackResponse
 
 from .duplicate_checker import DuplicateChecker
 from .few_shot_store import FewShotJsonStore
-from .sql_parser import extract_tables_from_sql
 
 
 class Feedback:
@@ -33,9 +33,9 @@ class Feedback:
 
     def _handle_positive(self, request: FeedbackRequest) -> FeedbackResponse:
         try:
-            is_duplicate, reason = self._is_duplicate(request.question)
+            is_duplicate, reason = self._is_duplicate(request.query)
             if is_duplicate:
-                logger.info(f"이미 존재하는 few_shot 질문입니다 : {request.question}, reason={reason}")
+                logger.info(f"이미 존재하는 few_shot 질문입니다 : {request.query}, reason={reason}")
                 return FeedbackResponse(
                     success=True,
                     message=f"이미 학습된 유사 질문이 존재합니다. ({reason})",
@@ -45,7 +45,7 @@ class Feedback:
             tables_used = extract_tables_from_sql(request.sql)
             self.store.append_example(
                 example_id=example_id,
-                question=request.question,
+                query=request.query,
                 sql=request.sql,
                 explanation=request.explanation,
                 tables_used=tables_used,
@@ -75,15 +75,12 @@ class Feedback:
             message="불만족스러운 이유를 알려주세요.",
         )
 
-    def _is_duplicate(self, question: str) -> tuple[bool, str]:
+    def _is_duplicate(self, query: str) -> tuple[bool, str]:
         if self.duplicate_checker is None:
             return False, "no_similarity_backend"
 
         try:
-            return self.duplicate_checker.is_duplicate(question)
+            return self.duplicate_checker.is_duplicate(query)
         except Exception as e:
             logger.warning(f"유사도 중복 검사 실패: {e}")
             return False, "similarity_check_failed"
-
-
-__all__ = ["Feedback"]

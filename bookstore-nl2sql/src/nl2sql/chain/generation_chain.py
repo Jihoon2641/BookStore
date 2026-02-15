@@ -33,7 +33,7 @@ def create_generation_chain(llm_model: str, openai_key: str):
         {few_shot}
         
         **사용자 질문:**
-        {question}
+        {query}
         
         **출력 형식:**
         {format_instructions}
@@ -46,13 +46,13 @@ def create_generation_chain(llm_model: str, openai_key: str):
         SQL 생성 및 딕셔너리 변환
         
         입력: {
-            "question": "...",
+            "query": "...",
             "schemas": [...],
             "few_shot": [...]
         }
         
         출력: {
-            "question": "...",
+            "query": "...",
             "schemas": [...],
             "few_shot": [...],
             "sql": "...",
@@ -61,7 +61,7 @@ def create_generation_chain(llm_model: str, openai_key: str):
         """
 
         prompt_input = {
-            "question": input_data.get("question", ""),
+            "query": input_data.get("query", ""),
             "schemas": format_schemas(input_data.get("schemas", [])),
             "few_shot": format_few_shot(input_data.get("few_shot", [])),
             "format_instructions": output_parser.get_format_instructions()
@@ -128,13 +128,13 @@ def format_few_shot(examples):
     lines = ["**참고 예제:**\n"]
     
     for i, example in enumerate(examples, 1):
-        question = example["question"]
+        query = example["query"]
         metadata = example.get("metadata", {})
         sql = metadata.get("sql", "")
         explanation = metadata.get("explanation", "")
         
         lines.append(f"예제 {i}:")
-        lines.append(f"질문: {question}")
+        lines.append(f"질문: {query}")
         lines.append(f"SQL: {sql}")
         if explanation:
             lines.append(f"설명: {explanation}")

@@ -46,11 +46,11 @@ def create_retry_chain(
         다시 생성해주세요.
         """
         
-        question = output.get('question', '')
+        query = output.get('query', '')
         
         try:
             new_output = generate_chain.invoke({
-                "question": question + "\n\n" + retry_prompt,
+                "query": query + "\n\n" + retry_prompt,
                 "schemas": output.get('schemas', []),
                 "few_shot": output.get('few_shot', [])
             })

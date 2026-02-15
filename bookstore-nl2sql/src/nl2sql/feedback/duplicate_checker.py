@@ -9,8 +9,8 @@ class DuplicateChecker:
         self.chroma = ChromaStore()
         self.chroma.init_few_shot_collection(reset=False)
 
-    def is_duplicate(self, question: str) -> tuple[bool, str]:
-        query_embedding = self.embedding_model.encode_single(question)
+    def is_duplicate(self, query: str) -> tuple[bool, str]:
+        query_embedding = self.embedding_model.encode_single(query)
         results = self.chroma.search_few_shot(query_embedding, top_k=1)
         if not results:
             return False, "가장 유사한 질문 없음"
