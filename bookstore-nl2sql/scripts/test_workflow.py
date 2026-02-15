@@ -35,7 +35,7 @@
 
 # def print_response(response):
 #     """응답 결과를 보기 좋게 출력"""
-#     print(f"📝 질문: {response.question}")
+#     print(f"📝 질문: {response.query}")
 #     print(f"🤖 생성된 SQL:\n{response.sql}\n")
 
 #     if response.validation_passed:

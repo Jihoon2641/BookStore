@@ -75,17 +75,17 @@ class PromptTemplate:
 
         for i, example in enumerate(examples, 1):
             if isinstance(example, dict):
-                question = example["question"]
+                query = example["query"]
                 metadata = example.get("metadata", example)
                 sql = metadata.get("sql", "")
                 explanation = metadata.get("explanation", "")
             else:
-                question = getattr(example, "question", "")
+                query = getattr(example, "query", "")
                 sql = getattr(example, "sql", "")
                 explanation = getattr(example, "explanation", "")
 
             lines.append(f"예제 {i}:")
-            lines.append(f"질문: {question}")
+            lines.append(f"질문: {query}")
             lines.append(f"SQL: {sql}")
             lines.append(f"설명: {explanation}")
             lines.append("")
@@ -94,13 +94,13 @@ class PromptTemplate:
 
     @staticmethod
     def build_user_prompt(
-        question: str, schemas: str, few_shot: str, format_instructions: str
+        query: str, schemas: str, few_shot: str, format_instructions: str
     ) -> str:
         """
         일반 사용자 질문 프롬프트 생성
 
         Args:
-            question: 자연어 질문
+            query: 자연어 질문
             schemas: 포맷된 스키마 텍스트
             few_shot: 포맷된 예제 텍스트
             format_instructions: 출력 형식 지시사항
@@ -114,7 +114,7 @@ class PromptTemplate:
 {few_shot}
 
 **사용자 질문:**
-{question}
+{query}
 
 **출력 형식:**
 {format_instructions}
@@ -127,7 +127,7 @@ class PromptTemplate:
 
     @staticmethod
     def build_retry_prompt(
-        question: str,
+        query: str,
         schemas: str,
         few_shot: str,
         previous_sql: str,
@@ -139,7 +139,7 @@ class PromptTemplate:
         재생성용 프롬프트 (오류 피드백 포함)
 
         Args:
-            question: 원본 자연어 질문
+            query: 원본 자연어 질문
             schemas: 포맷된 스키마 텍스트
             few_shot: 포맷된 예제 텍스트
             previous_sql: 이전에 생성된 SQL (오류 있음)
@@ -159,7 +159,7 @@ class PromptTemplate:
 {few_shot}
 
 **사용자 질문:**
-{question}
+{query}
 
 **이전 SQL 생성 실패:**
 아래 SQL은 검증에 실패했습니다.

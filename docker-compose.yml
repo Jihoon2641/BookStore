@@ -111,7 +111,7 @@ services:
       - ANONYMIZED_TELEMETRY=FALSE
       - ALLOW_RESET=TRUE
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8000/api/v2/heartbeat" ]
+      test: [ "CMD-SHELL", "bash -lc 'echo > /dev/tcp/127.0.0.1/8000'" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -123,7 +123,7 @@ services:
       dockerfile: Dockerfile
     container_name: bookstore-nl2sql
     ports:
-      - "8001:8001"
+      - "8001:8000"
     env_file:
       - ./bookstore-nl2sql/.env
     environment:

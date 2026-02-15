@@ -12,4 +12,4 @@ langchain_processor = NL2SQLProcessor(openai_key, model)
 
 response = langchain_processor.process(QueryRequest(query="이번달에 가장 많이 주문한 사용자는?"))
 
-print(response)
+print(response.sql, response.retrieved_schema, response.retrieved_few_shot, response.validation_passed, response.validation_error, response.parsed_sql)

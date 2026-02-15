@@ -1,4 +1,4 @@
-from langchain_core.runnables import RunnableLambda
+from langchain_core.runnables import chain
 from loguru import logger
 
 def create_retry_chain(
@@ -13,6 +13,7 @@ def create_retry_chain(
     - 재시도 횟수 초과 시 실패 상태 유지
     """
     
+    @chain
     def retry_logic(output):
         """재시도 로직 (최대 max_retries번)"""
         
@@ -45,11 +46,11 @@ def create_retry_chain(
         다시 생성해주세요.
         """
         
-        question = output.get('question', '')
+        query = output.get('query', '')
         
         try:
             new_output = generate_chain.invoke({
-                "question": question + "\n\n" + retry_prompt,
+                "query": query + "\n\n" + retry_prompt,
                 "schemas": output.get('schemas', []),
                 "few_shot": output.get('few_shot', [])
             })
@@ -71,4 +72,4 @@ def create_retry_chain(
                 "error_message": f"재생성 실패: {str(e)}"
             }
     
-    return RunnableLambda(retry_logic)
+    return retry_logic
