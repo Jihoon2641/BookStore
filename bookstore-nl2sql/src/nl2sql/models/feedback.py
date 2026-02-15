@@ -6,6 +6,7 @@ class FeedbackRequest(BaseModel):
     sql: str = Field(..., description="생성된 SQL")
     explanation: str = Field(..., description="SQL 설명")
     satisfied: bool = Field(..., description="만족 여부")
+    feedback_text: str | None = Field(None, description="불만족 이유(자유 텍스트)")
 
 class FeedbackResponse(BaseModel):
     success: bool = Field(..., description="성공 여부")
