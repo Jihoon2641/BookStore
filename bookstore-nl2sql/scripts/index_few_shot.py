@@ -34,7 +34,7 @@ def main():
 
     for example in examples:
         example_id = example["example_id"]
-        query = example.get("query", example.get("question", ""))
+        query = example.get("query", example.get("query", ""))
         sql = example["sql"]
         explanation = example["explanation"]
         tables_used = example.get("tables_used", [])
