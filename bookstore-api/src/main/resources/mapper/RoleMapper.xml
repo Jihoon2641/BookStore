@@ -7,4 +7,8 @@
         SELECT * FROM roles WHERE id = #{id}
     </select>
 
+    <select id="findByRole" resultType="RolesEntity">
+        SELECT * FROM roles WHERE role = #{role}
+    </select>
+
 </mapper>
