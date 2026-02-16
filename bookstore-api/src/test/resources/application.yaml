@@ -43,3 +43,18 @@ naver:
 jwt:
   secret: VlwEyVlPKZ6yV9yVlwEyVlPKZ6yV9yVlwEyVlPKZ6yV9yVlwEyVlPKZ6yV9y
   expiration: 3600000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when_authorized
+  metrics:
+    export:
+      prometheus:
+        enabled: true
