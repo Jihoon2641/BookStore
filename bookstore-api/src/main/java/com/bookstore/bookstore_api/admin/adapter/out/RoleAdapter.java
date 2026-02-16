@@ -18,4 +18,9 @@ public class RoleAdapter implements RoleRepository {
         return roleMapper.findById(id);
     }
 
+    @Override
+    public RolesEntity findByRole(String role) {
+        return roleMapper.findByRole(role);
+    }
+
 }
