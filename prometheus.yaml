@@ -1,0 +1,21 @@
+# 전역 설정
+global:
+  # 메트릭 수집 주기 : 15초마다 타겟 서버들에게 메트릭 요청
+  scrape_interval: 15s
+  # 알람 규칙 평가 주기 : 15초마다 알람 규칙을 확인해서 알림 발생 여부 판단
+  evaluation_interval: 15s
+
+# 수집 대상 설정
+scrape_configs:
+  # bookstore-api 메트릭 수집, job='bookstroe-api' 라벨이 붙음
+  - job_name: 'bookstore-api'
+    # 메트릭 수집 경로
+    metrics_path: /actuator/prometheus
+    # 고정(정적)타켓 목록
+    static_configs:
+      - targets: ['bookstore-api:8080']
+
+  # node-exporter 메트릭 수집, job='node-exporter' 라벨이 붙음
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']

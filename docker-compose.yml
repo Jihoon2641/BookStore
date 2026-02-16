@@ -141,6 +141,35 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: bookstore-node-exporter
+    ports:
+      - "9100:9100"
+    command:
+      - '--path.rootfs=/host'
+    volumes:
+      - '/:/host:ro,rslave'
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: bookstore-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-lifecycle'
+    depends_on:
+      - bookstore-api
+      - node-exporter
+    restart: unless-stopped
+
 volumes:
   bookstore-db-data:
   chromadb-data:
+  prometheus-data:
