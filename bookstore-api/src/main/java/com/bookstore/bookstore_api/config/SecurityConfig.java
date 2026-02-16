@@ -33,7 +33,6 @@ public class SecurityConfig {
     private final RateLimiterService rateLimiterService;
     private final BotDetectionService botDetectionService;
     private final UserLogRepository userLogRepository;
-    private final RoleHierarchy roleHierarchy;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -43,7 +42,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         JwtAuthenticationFilter jwtFilter = new JwtAuthenticationFilter(jwtUtil);
-        RequestLoggingFilter requestLoggingFilter = new RequestLoggingFilter(rateLimiterService, botDetectionService, userLogRepository);
+        RequestLoggingFilter requestLoggingFilter = new RequestLoggingFilter(rateLimiterService, botDetectionService,
+                userLogRepository);
         AuthorizationManager<RequestAuthorizationContext> monitoringAccessManager = monitoringAccessManager();
 
         http
@@ -51,14 +51,16 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/actuator/health/**", "/actuator/info", "/actuator/prometheus", "/actuator/metrics/**")
+                        .requestMatchers("/actuator/health/**", "/actuator/info", "/actuator/prometheus",
+                                "/actuator/metrics/**")
                         .permitAll()
                         .requestMatchers("/api/v1/admin/monitoring/**").access(monitoringAccessManager)
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/api/v1/user/login", "/api/v1/user/signup", "/api/v1/orders").permitAll()
                         .requestMatchers("/api/v1/books/**").permitAll()
                         .anyRequest().authenticated())
-                // RequestLoggingFilter -> JwtAuthenticationFilter -> UsernamePasswordAuthenticationFilter 순서
+                // RequestLoggingFilter -> JwtAuthenticationFilter ->
+                // UsernamePasswordAuthenticationFilter 순서
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(requestLoggingFilter, JwtAuthenticationFilter.class);
 
@@ -75,9 +77,9 @@ public class SecurityConfig {
     }
 
     private AuthorizationManager<RequestAuthorizationContext> monitoringAccessManager() {
-        AuthorityAuthorizationManager<RequestAuthorizationContext> accessManager =
-                AuthorityAuthorizationManager.hasRole("LEVEL_1");
-        accessManager.setRoleHierarchy(roleHierarchy);
+        AuthorityAuthorizationManager<RequestAuthorizationContext> accessManager = AuthorityAuthorizationManager
+                .hasRole("LEVEL_1");
+        accessManager.setRoleHierarchy(roleHierarchy());
         return accessManager;
     }
 }

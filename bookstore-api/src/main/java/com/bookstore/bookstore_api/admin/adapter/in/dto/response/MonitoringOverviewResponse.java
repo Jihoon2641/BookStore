@@ -14,7 +14,9 @@ public record MonitoringOverviewResponse(
             Double heapUsedMb,
             Double heapMaxMb,
             Double dbPoolActive,
-            Double dbPoolMax) {
+            Double dbPoolMax,
+            Double hostCpuPct,
+            Double hostMemPct) {
     }
 
     public record TrafficUsage(

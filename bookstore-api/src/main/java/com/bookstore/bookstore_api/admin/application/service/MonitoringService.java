@@ -20,6 +20,7 @@ import com.bookstore.bookstore_api.admin.adapter.in.dto.response.MonitoringHealt
 import com.bookstore.bookstore_api.admin.adapter.in.dto.response.MonitoringMetricNamesResponse;
 import com.bookstore.bookstore_api.admin.adapter.in.dto.response.MonitoringMetricResponse;
 import com.bookstore.bookstore_api.admin.adapter.in.dto.response.MonitoringOverviewResponse;
+import com.bookstore.bookstore_api.admin.adapter.out.PrometheusQueryAdapter;
 import com.bookstore.bookstore_api.admin.application.port.in.MonitoringUseCase;
 
 import io.micrometer.core.instrument.MeterRegistry;
@@ -38,6 +39,7 @@ public class MonitoringService implements MonitoringUseCase {
     private final MetricsEndpoint metricsEndpoint;
     private final MeterRegistry meterRegistry;
     private final HealthEndpoint healthEndpoint;
+    private final PrometheusQueryAdapter prometheusQueryAdapter;
 
     @Override
     public MonitoringOverviewResponse getOverview() {
@@ -49,6 +51,8 @@ public class MonitoringService implements MonitoringUseCase {
         Double heapUsedPct = divideAndMultiply(heapUsedBytes, heapMaxBytes, 100d);
         Double dbPoolActive = getGaugeValue("hikaricp.connections.active");
         Double dbPoolMax = getGaugeValue("hikaricp.connections.max");
+        Double hostCpuPct = getHostCpuPct();
+        Double hostMemPct = getHostMemPct();
 
         TrafficMetrics trafficMetrics = calculateTrafficMetrics(health.uptimeSec());
 
@@ -58,7 +62,9 @@ public class MonitoringService implements MonitoringUseCase {
                 round(divide(heapUsedBytes, BYTES_TO_MB)),
                 round(divide(heapMaxBytes, BYTES_TO_MB)),
                 round(dbPoolActive),
-                round(dbPoolMax));
+                round(dbPoolMax),
+                round(hostCpuPct),
+                round(hostMemPct));
 
         MonitoringOverviewResponse.TrafficUsage traffic = new MonitoringOverviewResponse.TrafficUsage(
                 round(trafficMetrics.requestsPerSecond()),
@@ -158,6 +164,16 @@ public class MonitoringService implements MonitoringUseCase {
 
     private boolean is5xx(String status) {
         return status != null && status.startsWith("5");
+    }
+
+    private Double getHostCpuPct() {
+        String query = "100 - (avg by(instance)(rate(node_cpu_seconds_total{mode=\"idle\"}[1m])) * 100)";
+        return prometheusQueryAdapter.queryScalar(query).orElse(null);
+    }
+
+    private Double getHostMemPct() {
+        String query = "(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100";
+        return prometheusQueryAdapter.queryScalar(query).orElse(null);
     }
 
     private String resolveServiceStatus(HealthComponent healthComponent) {

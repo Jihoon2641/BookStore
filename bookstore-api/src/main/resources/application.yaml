@@ -67,3 +67,7 @@ management:
     export:
       prometheus:
         enabled: true
+
+monitoring:
+  prometheus:
+    base-url: ${PROMETHEUS_BASE_URL:http://localhost:9090}

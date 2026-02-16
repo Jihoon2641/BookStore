@@ -1,4 +1,6 @@
 spring:
+  application:
+    name: bookstore-api
   datasource:
     url: jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1
     username: sa
@@ -58,3 +60,7 @@ management:
     export:
       prometheus:
         enabled: true
+
+monitoring:
+  prometheus:
+    base-url: ${PROMETHEUS_BASE_URL:http://localhost:9090}
