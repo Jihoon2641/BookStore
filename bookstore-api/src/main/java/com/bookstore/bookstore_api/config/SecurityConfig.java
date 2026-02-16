@@ -57,6 +57,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/admin/monitoring/**").access(monitoringAccessManager)
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/api/v1/user/login", "/api/v1/user/signup", "/api/v1/orders").permitAll()
+                        .requestMatchers("/api/v1/admin/signup", "/api/v1/admin/login").permitAll()
                         .requestMatchers("/api/v1/books/**").permitAll()
                         .anyRequest().authenticated())
                 // RequestLoggingFilter -> JwtAuthenticationFilter ->

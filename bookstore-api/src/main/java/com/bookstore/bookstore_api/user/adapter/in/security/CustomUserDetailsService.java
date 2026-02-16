@@ -5,8 +5,11 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import com.bookstore.bookstore_api.admin.adapter.in.security.AdminUserDetails;
+import com.bookstore.bookstore_api.admin.application.port.out.AdminRepository;
 import com.bookstore.bookstore_api.user.application.port.out.UserAccountRepository;
 import com.bookstore.bookstore_api.admin.application.port.out.RoleRepository;
+import com.bookstore.bookstore_api.admin.domain.model.Admin;
 import com.bookstore.bookstore_api.admin.domain.entity.RolesEntity;
 import com.bookstore.bookstore_api.admin.domain.model.Roles;
 import com.bookstore.bookstore_api.user.domain.model.User;
@@ -19,19 +22,25 @@ import lombok.RequiredArgsConstructor;
 public class CustomUserDetailsService implements UserDetailsService {
 
     private final UserAccountRepository userAccountRepository;
+    private final AdminRepository adminRepository;
     private final RoleRepository roleRepository;
 
     @Override
     @Transactional
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         User user = userAccountRepository.findByEmail(email);
-        if (user == null) {
-            throw new UsernameNotFoundException("User not found with email: " + email);
+        if (user != null) {
+            RolesEntity role = roleRepository.findById(user.getRoleId());
+            Roles roles = Roles.create(role.getId(), role.getRole(), role.getDescription());
+            return new CustomUserDetails(user, roles);
         }
-        RolesEntity role = roleRepository.findById(user.getRoleId());
 
-        Roles roles = Roles.create(role.getId(), role.getRole(), role.getDescription());
+        Admin admin = adminRepository.findByAdminId(email);
+        if (admin != null) {
+            RolesEntity role = roleRepository.findById(admin.getRoleId());
+            return new AdminUserDetails(admin, role.getRole());
+        }
 
-        return new CustomUserDetails(user, roles);
+        throw new UsernameNotFoundException("User/Admin not found: " + email);
     }
 }

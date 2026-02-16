@@ -8,4 +8,6 @@ import com.bookstore.bookstore_api.admin.domain.entity.RolesEntity;
 public interface RoleMapper {
 
     RolesEntity findById(Long id);
+
+    RolesEntity findByRole(String role);
 }
