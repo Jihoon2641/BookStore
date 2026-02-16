@@ -1,28 +1,59 @@
-import { useState } from 'react';
-import axios from 'axios';
+import 'src/global.css';
 
-export default function App() {
-  const [keyword, setKeyword] = useState('');
+import { useEffect } from 'react';
 
-  const handleSend = async () => {
-    try {
-      const response = await axios.post('https://localhost/api/books/search', {
-        title: keyword
-      });
+import Fab from '@mui/material/Fab';
 
-      alert(`백엔드 응답 : ${JSON.stringify(response.data)}`);
-    } catch (error) {
-      console.error('전송 실패 :', error);
-      alert(`전송 실패 : ${error}`);
-    }
-  }
+import { usePathname } from 'src/routes/hooks';
+
+import { ThemeProvider } from 'src/theme/theme-provider';
+
+import { Iconify } from 'src/components/iconify';
+
+// ----------------------------------------------------------------------
+
+type AppProps = {
+  children: React.ReactNode;
+};
+
+export default function App({ children }: AppProps) {
+  useScrollToTop();
+
+  const githubButton = () => (
+    <Fab
+      size="medium"
+      aria-label="Github"
+      href="https://github.com/minimal-ui-kit/material-kit-react"
+      sx={{
+        zIndex: 9,
+        right: 20,
+        bottom: 20,
+        width: 48,
+        height: 48,
+        position: 'fixed',
+        bgcolor: 'grey.800',
+      }}
+    >
+      <Iconify width={24} icon="socials:github" sx={{ '--color': 'white' }} />
+    </Fab>
+  );
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h2>도서 검색 테스트</h2>
-      <input
-        type="text" value={keyword} onChange={(e) => setKeyword(e.target.value)} />
-      <button onClick={handleSend}>전송</button>
-    </div>
-  )
+    <ThemeProvider>
+      {children}
+      {githubButton()}
+    </ThemeProvider>
+  );
+}
+
+// ----------------------------------------------------------------------
+
+function useScrollToTop() {
+  const pathname = usePathname();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
 }
