@@ -12,9 +12,6 @@ import org.springframework.boot.actuate.health.HealthComponent;
 import org.springframework.boot.actuate.health.HealthEndpoint;
 import org.springframework.boot.actuate.metrics.MetricsEndpoint;
 import org.springframework.boot.actuate.metrics.MetricsEndpoint.MetricDescriptor;
-import org.springframework.boot.availability.ApplicationAvailability;
-import org.springframework.boot.availability.LivenessState;
-import org.springframework.boot.availability.ReadinessState;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
@@ -41,7 +38,6 @@ public class MonitoringService implements MonitoringUseCase {
     private final MetricsEndpoint metricsEndpoint;
     private final MeterRegistry meterRegistry;
     private final HealthEndpoint healthEndpoint;
-    private final ApplicationAvailability applicationAvailability;
 
     @Override
     public MonitoringOverviewResponse getOverview() {
@@ -76,10 +72,8 @@ public class MonitoringService implements MonitoringUseCase {
     public MonitoringHealthResponse getHealth() {
         HealthComponent healthComponent = healthEndpoint.health();
         String service = resolveServiceStatus(healthComponent);
-        String readiness = mapReadiness(applicationAvailability.getReadinessState());
-        String liveness = mapLiveness(applicationAvailability.getLivenessState());
         long uptimeSec = ManagementFactory.getRuntimeMXBean().getUptime() / 1000;
-        return new MonitoringHealthResponse(Instant.now(), service, readiness, liveness, uptimeSec);
+        return new MonitoringHealthResponse(Instant.now(), service, uptimeSec);
     }
 
     @Override
@@ -181,15 +175,7 @@ public class MonitoringService implements MonitoringUseCase {
 
         }
 
-        return mapReadiness(applicationAvailability.getReadinessState());
-    }
-
-    private String mapReadiness(ReadinessState readinessState) {
-        return readinessState == ReadinessState.ACCEPTING_TRAFFIC ? "UP" : "DOWN";
-    }
-
-    private String mapLiveness(LivenessState livenessState) {
-        return livenessState == LivenessState.CORRECT ? "UP" : "DOWN";
+        return "UNKNOWN";
     }
 
     private Double getGaugeValue(String meterName, String... tagKeyValuePairs) {
