@@ -135,8 +135,7 @@ public class MonitoringService implements MonitoringUseCase {
                 throw new ResponseStatusException(BAD_REQUEST, "Invalid tag format. Use key:value");
             }
 
-            normalized.add(parts[0].trim());
-            normalized.add(parts[1].trim());
+            normalized.add(parts[0].trim() + ":" + parts[1].trim());
         }
         return normalized;
     }
