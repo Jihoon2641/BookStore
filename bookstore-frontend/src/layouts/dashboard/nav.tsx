@@ -1,11 +1,13 @@
 import type { Theme, SxProps, Breakpoint } from '@mui/material/styles';
 
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { varAlpha } from 'minimal-shared/utils';
 
 import Box from '@mui/material/Box';
+import Collapse from '@mui/material/Collapse';
 import ListItem from '@mui/material/ListItem';
 import { useTheme } from '@mui/material/styles';
+import IconButton from '@mui/material/IconButton';
 import ListItemButton from '@mui/material/ListItemButton';
 import Drawer, { drawerClasses } from '@mui/material/Drawer';
 
@@ -13,6 +15,7 @@ import { usePathname } from 'src/routes/hooks';
 import { RouterLink } from 'src/routes/components';
 
 import { Logo } from 'src/components/logo';
+import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 
 import { NavUpgrade } from '../components/nav-upgrade';
@@ -109,6 +112,26 @@ export function NavMobile({
 
 export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
   const pathname = usePathname();
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    setExpanded((previous) => {
+      const next = { ...previous };
+      let changed = false;
+
+      data.forEach((item) => {
+        const hasChildren = !!item.children?.length;
+        const isSystemPath = pathname === item.path || pathname.startsWith(`${item.path}/`);
+
+        if (hasChildren && isSystemPath && !next[item.path]) {
+          next[item.path] = true;
+          changed = true;
+        }
+      });
+
+      return changed ? next : previous;
+    });
+  }, [data, pathname]);
 
   return (
     <>
@@ -139,10 +162,14 @@ export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
             }}
           >
             {data.map((item) => {
+              const children = item.children ?? [];
+              const hasChildren = children.length > 0;
               const isActived = item.path === pathname;
+              const isChildActived = hasChildren && children.some((child) => child.path === pathname);
+              const isExpanded = hasChildren ? (expanded[item.path] ?? false) : false;
 
               return (
-                <ListItem disableGutters disablePadding key={item.title}>
+                <ListItem disableGutters disablePadding key={item.title} sx={{ display: 'block' }}>
                   <ListItemButton
                     disableGutters
                     component={RouterLink}
@@ -158,7 +185,7 @@ export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
                         fontWeight: 'fontWeightMedium',
                         color: theme.vars.palette.text.secondary,
                         minHeight: 44,
-                        ...(isActived && {
+                        ...((isActived || isChildActived) && {
                           fontWeight: 'fontWeightSemiBold',
                           color: theme.vars.palette.primary.main,
                           bgcolor: varAlpha(theme.vars.palette.primary.mainChannel, 0.08),
@@ -177,8 +204,83 @@ export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
                       {item.title}
                     </Box>
 
+                    {hasChildren && (
+                      <IconButton
+                        size="small"
+                        color="inherit"
+                        onClick={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          setExpanded((previous) => ({
+                            ...previous,
+                            [item.path]: !(previous[item.path] ?? isChildActived),
+                          }));
+                        }}
+                      >
+                        <Iconify
+                          width={16}
+                          icon={
+                            isExpanded
+                              ? 'eva:arrow-ios-upward-fill'
+                              : 'eva:arrow-ios-downward-fill'
+                          }
+                        />
+                      </IconButton>
+                    )}
+
                     {item.info && item.info}
                   </ListItemButton>
+
+                  {hasChildren && (
+                    <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                      <Box
+                        component="ul"
+                        sx={{
+                          gap: 0.5,
+                          mt: 0.5,
+                          mb: 0.5,
+                          pl: 1.25,
+                          display: 'flex',
+                          listStyle: 'none',
+                          flexDirection: 'column',
+                        }}
+                      >
+                        {children.map((child) => {
+                          const isChildItemActived = child.path === pathname;
+
+                          return (
+                            <ListItem disableGutters disablePadding key={child.path}>
+                              <ListItemButton
+                                disableGutters
+                                component={RouterLink}
+                                href={child.path}
+                                sx={[
+                                  (theme) => ({
+                                    py: 0.75,
+                                    pl: 5,
+                                    pr: 1.5,
+                                    borderRadius: 0.75,
+                                    typography: 'body2',
+                                    minHeight: 38,
+                                    color: theme.vars.palette.text.secondary,
+                                    ...(isChildItemActived && {
+                                      color: theme.vars.palette.primary.main,
+                                      fontWeight: 'fontWeightSemiBold',
+                                      bgcolor: varAlpha(theme.vars.palette.primary.mainChannel, 0.08),
+                                    }),
+                                  }),
+                                ]}
+                              >
+                                <Box component="span" sx={{ flexGrow: 1 }}>
+                                  {child.title}
+                                </Box>
+                              </ListItemButton>
+                            </ListItem>
+                          );
+                        })}
+                      </Box>
+                    </Collapse>
+                  )}
                 </ListItem>
               );
             })}
