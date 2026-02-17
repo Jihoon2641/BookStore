@@ -2,6 +2,7 @@ package com.bookstore.bookstore_api.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authorization.AuthorityAuthorizationManager;
 import org.springframework.security.authorization.AuthorizationManager;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
@@ -29,58 +30,68 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtUtil jwtUtil;
-    private final RateLimiterService rateLimiterService;
-    private final BotDetectionService botDetectionService;
-    private final UserLogRepository userLogRepository;
+        private final JwtUtil jwtUtil;
+        private final RateLimiterService rateLimiterService;
+        private final BotDetectionService botDetectionService;
+        private final UserLogRepository userLogRepository;
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+        @Bean
+        public PasswordEncoder passwordEncoder() {
+                return new BCryptPasswordEncoder();
+        }
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        JwtAuthenticationFilter jwtFilter = new JwtAuthenticationFilter(jwtUtil);
-        RequestLoggingFilter requestLoggingFilter = new RequestLoggingFilter(rateLimiterService, botDetectionService,
-                userLogRepository);
-        AuthorizationManager<RequestAuthorizationContext> monitoringAccessManager = monitoringAccessManager();
+        @Bean
+        public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+                JwtAuthenticationFilter jwtFilter = new JwtAuthenticationFilter(jwtUtil);
+                RequestLoggingFilter requestLoggingFilter = new RequestLoggingFilter(rateLimiterService,
+                                botDetectionService,
+                                userLogRepository);
+                AuthorizationManager<RequestAuthorizationContext> monitoringAccessManager = monitoringAccessManager();
 
-        http
-                .httpBasic(httpBasic -> httpBasic.disable())
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/actuator/health/**", "/actuator/info", "/actuator/prometheus",
-                                "/actuator/metrics/**")
-                        .permitAll()
-                        .requestMatchers("/api/v1/admin/monitoring/**").access(monitoringAccessManager)
-                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                        .requestMatchers("/api/v1/user/login", "/api/v1/user/signup", "/api/v1/orders").permitAll()
-                        .requestMatchers("/api/v1/admin/signup", "/api/v1/admin/login").permitAll()
-                        .requestMatchers("/api/v1/books/**").permitAll()
-                        .anyRequest().authenticated())
-                // RequestLoggingFilter -> JwtAuthenticationFilter ->
-                // UsernamePasswordAuthenticationFilter 순서
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(requestLoggingFilter, JwtAuthenticationFilter.class);
+                http
+                                .httpBasic(httpBasic -> httpBasic.disable())
+                                .csrf(csrf -> csrf.disable())
+                                .sessionManagement(session -> session
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                .authorizeHttpRequests(authorize -> authorize
+                                                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                                                .requestMatchers("/actuator/health/**", "/actuator/info",
+                                                                "/actuator/prometheus",
+                                                                "/actuator/metrics/**")
+                                                .permitAll()
+                                                .requestMatchers("/api/v1/admin/monitoring/**")
+                                                .access(monitoringAccessManager)
+                                                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**",
+                                                                "/swagger-ui.html")
+                                                .permitAll()
+                                                .requestMatchers("/api/v1/user/login", "/api/v1/user/signup",
+                                                                "/api/v1/orders")
+                                                .permitAll()
+                                                .requestMatchers("/api/v1/admin/signup", "/api/v1/admin/login")
+                                                .permitAll()
+                                                .requestMatchers("/api/v1/books/**").permitAll()
+                                                .anyRequest().authenticated())
+                                // RequestLoggingFilter -> JwtAuthenticationFilter ->
+                                // UsernamePasswordAuthenticationFilter 순서
+                                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                                .addFilterBefore(requestLoggingFilter, JwtAuthenticationFilter.class);
 
-        return http.build();
-    }
+                return http.build();
+        }
 
-    @Bean
-    public RoleHierarchy roleHierarchy() {
-        return RoleHierarchyImpl.fromHierarchy("""
-                ROLE_SUPER_ADMIN > ROLE_LEVEL_2
-                ROLE_LEVEL_2 > ROLE_LEVEL_1
-                ROLE_LEVEL_1 > ROLE_USER
-                """);
-    }
+        @Bean
+        public RoleHierarchy roleHierarchy() {
+                return RoleHierarchyImpl.fromHierarchy("""
+                                ROLE_SUPER_ADMIN > ROLE_LEVEL_2
+                                ROLE_LEVEL_2 > ROLE_LEVEL_1
+                                ROLE_LEVEL_1 > ROLE_USER
+                                """);
+        }
 
-    private AuthorizationManager<RequestAuthorizationContext> monitoringAccessManager() {
-        AuthorityAuthorizationManager<RequestAuthorizationContext> accessManager = AuthorityAuthorizationManager
-                .hasRole("LEVEL_1");
-        accessManager.setRoleHierarchy(roleHierarchy());
-        return accessManager;
-    }
+        private AuthorizationManager<RequestAuthorizationContext> monitoringAccessManager() {
+                AuthorityAuthorizationManager<RequestAuthorizationContext> accessManager = AuthorityAuthorizationManager
+                                .hasRole("LEVEL_1");
+                accessManager.setRoleHierarchy(roleHierarchy());
+                return accessManager;
+        }
 }
