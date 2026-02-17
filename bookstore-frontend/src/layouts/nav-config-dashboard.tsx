@@ -1,4 +1,3 @@
-import { Label } from 'src/components/label';
 import { SvgColor } from 'src/components/svg-color';
 
 // ----------------------------------------------------------------------
@@ -7,9 +6,10 @@ const icon = (name: string) => <SvgColor src={`/assets/icons/navbar/${name}.svg`
 
 export type NavItem = {
   title: string;
-  path: string;
-  icon: React.ReactNode;
+  path?: string;
+  icon?: React.ReactNode;
   info?: React.ReactNode;
+  children?: NavItem[];
 };
 
 export const navData = [
@@ -19,33 +19,32 @@ export const navData = [
     icon: icon('ic-analytics'),
   },
   {
-    title: 'User',
-    path: '/user',
-    icon: icon('ic-user'),
-  },
-  {
-    title: 'Product',
-    path: '/products',
-    icon: icon('ic-cart'),
-    info: (
-      <Label color="error" variant="inverted">
-        +3
-      </Label>
-    ),
-  },
-  {
-    title: 'Blog',
-    path: '/blog',
-    icon: icon('ic-blog'),
-  },
-  {
-    title: 'Sign in',
-    path: '/sign-in',
+    title: 'System',
+    path: '/system',
     icon: icon('ic-lock'),
+    children: [
+      {
+        title: 'DB (HikariCP)',
+        path: '/system/db',
+      },
+      {
+        title: 'JVM',
+        path: '/system/jvm',
+      },
+    ],
   },
   {
-    title: 'Not found',
-    path: '/404',
-    icon: icon('ic-disabled'),
+    title: 'Management',
+    icon: icon('ic-user'),
+    children: [
+      {
+        title: 'User',
+        path: '/user',
+      },
+      {
+        title: 'Product',
+        path: '/products',
+      },
+    ],
   },
 ];

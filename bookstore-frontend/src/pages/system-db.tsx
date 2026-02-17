@@ -1,15 +1,16 @@
 import { CONFIG } from 'src/config-global';
 
-import { SignInView } from 'src/sections/auth';
+import { SystemDbView } from 'src/sections/system/view';
 
 // ----------------------------------------------------------------------
 
 export default function Page() {
   return (
     <>
-      <title>{`Admin sign in - ${CONFIG.appName}`}</title>
+      <title>{`System DB Metrics - ${CONFIG.appName}`}</title>
 
-      <SignInView />
+      <SystemDbView />
     </>
   );
 }
+

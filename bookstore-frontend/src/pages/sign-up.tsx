@@ -1,16 +1,16 @@
-import { _posts } from 'src/_mock';
 import { CONFIG } from 'src/config-global';
 
-import { BlogView } from 'src/sections/blog/view';
+import { SignUpView } from 'src/sections/auth';
 
 // ----------------------------------------------------------------------
 
 export default function Page() {
   return (
     <>
-      <title>{`Blog - ${CONFIG.appName}`}</title>
+      <title>{`Admin sign up - ${CONFIG.appName}`}</title>
 
-      <BlogView posts={_posts} />
+      <SignUpView />
     </>
   );
 }
+
