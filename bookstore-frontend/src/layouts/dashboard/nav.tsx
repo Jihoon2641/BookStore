@@ -121,10 +121,13 @@ export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
 
       data.forEach((item) => {
         const hasChildren = !!item.children?.length;
-        const isSystemPath = pathname === item.path || pathname.startsWith(`${item.path}/`);
+        const itemKey = item.path ?? item.title;
+        const isPathMatched = item.path
+          ? pathname === item.path || pathname.startsWith(`${item.path}/`)
+          : item.children?.some((child) => child.path === pathname);
 
-        if (hasChildren && isSystemPath && !next[item.path]) {
-          next[item.path] = true;
+        if (hasChildren && isPathMatched && !next[itemKey]) {
+          next[itemKey] = true;
           changed = true;
         }
       });
@@ -162,18 +165,34 @@ export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
             }}
           >
             {data.map((item) => {
+              const itemKey = item.path ?? item.title;
               const children = item.children ?? [];
+              const linkChildren = children.filter((child): child is NavItem & { path: string } =>
+                Boolean(child.path)
+              );
               const hasChildren = children.length > 0;
-              const isActived = item.path === pathname;
+              const isActived = item.path ? item.path === pathname : false;
               const isChildActived = hasChildren && children.some((child) => child.path === pathname);
-              const isExpanded = hasChildren ? (expanded[item.path] ?? false) : false;
+              const isExpanded = hasChildren ? (expanded[itemKey] ?? false) : false;
+              const handleToggleExpand = () => {
+                setExpanded((previous) => ({
+                  ...previous,
+                  [itemKey]: !(previous[itemKey] ?? isChildActived),
+                }));
+              };
+              const isLinkItem = !!item.path;
 
               return (
                 <ListItem disableGutters disablePadding key={item.title} sx={{ display: 'block' }}>
                   <ListItemButton
                     disableGutters
-                    component={RouterLink}
-                    href={item.path}
+                    {...(isLinkItem && { component: RouterLink, href: item.path })}
+                    onClick={(event) => {
+                      if (hasChildren && !isLinkItem) {
+                        event.preventDefault();
+                        handleToggleExpand();
+                      }
+                    }}
                     sx={[
                       (theme) => ({
                         pl: 2,
@@ -211,10 +230,7 @@ export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
                         onClick={(event) => {
                           event.preventDefault();
                           event.stopPropagation();
-                          setExpanded((previous) => ({
-                            ...previous,
-                            [item.path]: !(previous[item.path] ?? isChildActived),
-                          }));
+                          handleToggleExpand();
                         }}
                       >
                         <Iconify
@@ -245,7 +261,7 @@ export function NavContent({ data, slots, workspaces, sx }: NavContentProps) {
                           flexDirection: 'column',
                         }}
                       >
-                        {children.map((child) => {
+                        {linkChildren.map((child) => {
                           const isChildItemActived = child.path === pathname;
 
                           return (
