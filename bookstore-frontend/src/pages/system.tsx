@@ -1,15 +1,16 @@
 import { CONFIG } from 'src/config-global';
 
-import { SignInView } from 'src/sections/auth';
+import { SystemResourceView } from 'src/sections/system/view';
 
 // ----------------------------------------------------------------------
 
 export default function Page() {
   return (
     <>
-      <title>{`Admin sign in - ${CONFIG.appName}`}</title>
+      <title>{`System - ${CONFIG.appName}`}</title>
 
-      <SignInView />
+      <SystemResourceView />
     </>
   );
 }
+
