@@ -1,15 +1,16 @@
 import { CONFIG } from 'src/config-global';
 
-import { SignInView } from 'src/sections/auth';
+import { SignUpView } from 'src/sections/auth';
 
 // ----------------------------------------------------------------------
 
 export default function Page() {
   return (
     <>
-      <title>{`Admin sign in - ${CONFIG.appName}`}</title>
+      <title>{`Admin sign up - ${CONFIG.appName}`}</title>
 
-      <SignInView />
+      <SignUpView />
     </>
   );
 }
+

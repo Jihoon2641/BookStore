@@ -14,18 +14,20 @@ import InputAdornment from '@mui/material/InputAdornment';
 import { useRouter } from 'src/routes/hooks';
 import { RouterLink } from 'src/routes/components';
 
-import { signInAdmin } from 'src/services/admin-auth';
+import { signInAdmin, signUpAdmin } from 'src/services/admin-auth';
 
 import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
-export function SignInView() {
+export function SignUpView() {
   const router = useRouter();
 
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [adminId, setAdminId] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -37,12 +39,33 @@ export function SignInView() {
     setPassword(event.target.value);
   }, []);
 
-  const handleSignIn = useCallback(
+  const handleConfirmPasswordChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+    setConfirmPassword(event.target.value);
+  }, []);
+
+  const handleSignUp = useCallback(
     async (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
 
-      if (!adminId.trim() || !password) {
-        setErrorMessage('관리자 아이디와 비밀번호를 입력해 주세요.');
+      const trimmedAdminId = adminId.trim();
+
+      if (!trimmedAdminId || !password || !confirmPassword) {
+        setErrorMessage('모든 항목을 입력해 주세요.');
+        return;
+      }
+
+      if (trimmedAdminId.length < 4 || trimmedAdminId.length > 30) {
+        setErrorMessage('관리자 아이디는 4자 이상 30자 이하여야 합니다.');
+        return;
+      }
+
+      if (password.length < 8 || password.length > 15) {
+        setErrorMessage('관리자 비밀번호는 8자 이상 15자 이하여야 합니다.');
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        setErrorMessage('비밀번호 확인 값이 일치하지 않습니다.');
         return;
       }
 
@@ -50,21 +73,22 @@ export function SignInView() {
       setIsSubmitting(true);
 
       try {
-        await signInAdmin(adminId.trim(), password);
+        await signUpAdmin(trimmedAdminId, password);
+        await signInAdmin(trimmedAdminId, password);
         router.replace('/');
       } catch (error) {
-        setErrorMessage(error instanceof Error ? error.message : '로그인 처리 중 오류가 발생했습니다.');
+        setErrorMessage(error instanceof Error ? error.message : '회원가입 처리 중 오류가 발생했습니다.');
       } finally {
         setIsSubmitting(false);
       }
     },
-    [adminId, password, router]
+    [adminId, confirmPassword, password, router]
   );
 
   const renderForm = (
     <Box
       component="form"
-      onSubmit={handleSignIn}
+      onSubmit={handleSignUp}
       sx={{
         display: 'flex',
         alignItems: 'flex-end',
@@ -97,7 +121,8 @@ export function SignInView() {
         value={password}
         onChange={handlePasswordChange}
         type={showPassword ? 'text' : 'password'}
-        autoComplete="current-password"
+        autoComplete="new-password"
+        sx={{ mb: 3 }}
         slotProps={{
           inputLabel: { shrink: true },
           input: {
@@ -110,18 +135,38 @@ export function SignInView() {
             ),
           },
         }}
-        sx={{ mb: 3 }}
       />
 
-      <Button
+      <TextField
         fullWidth
-        size="large"
-        type="submit"
-        color="inherit"
-        variant="contained"
-        disabled={isSubmitting}
-      >
-        {isSubmitting ? 'Signing in...' : 'Sign in'}
+        name="confirmPassword"
+        label="Confirm password"
+        value={confirmPassword}
+        onChange={handleConfirmPasswordChange}
+        type={showConfirmPassword ? 'text' : 'password'}
+        autoComplete="new-password"
+        sx={{ mb: 3 }}
+        slotProps={{
+          inputLabel: { shrink: true },
+          input: {
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  edge="end"
+                >
+                  <Iconify
+                    icon={showConfirmPassword ? 'solar:eye-bold' : 'solar:eye-closed-bold'}
+                  />
+                </IconButton>
+              </InputAdornment>
+            ),
+          },
+        }}
+      />
+
+      <Button fullWidth size="large" type="submit" color="inherit" variant="contained" disabled={isSubmitting}>
+        {isSubmitting ? 'Signing up...' : 'Sign up'}
       </Button>
     </Box>
   );
@@ -137,16 +182,16 @@ export function SignInView() {
           mb: 5,
         }}
       >
-        <Typography variant="h5">Admin LogIn</Typography>
+        <Typography variant="h5">Admin Sign up</Typography>
         <Typography
           variant="body2"
           sx={{
             color: 'text.secondary',
           }}
         >
-          Don’t have an account?
-          <Link component={RouterLink} href="/sign-up" variant="subtitle2" sx={{ ml: 0.5 }}>
-            Sign up
+          Already have an account?
+          <Link component={RouterLink} href="/sign-in" variant="subtitle2" sx={{ ml: 0.5 }}>
+            Sign in
           </Link>
         </Typography>
       </Box>
