@@ -9,9 +9,18 @@ public interface OrderLogMapper {
 
     /**
      * 주문 로그 저장
+     * 
      * @param orderLogEntity 주문 로그 엔티티
      * @return 저장된 행 수
      */
     int save(OrderLogEntity orderLogEntity);
+
+    /**
+     * RequestId 중복 확인
+     * 
+     * @param requestId 요청 ID
+     * @return 중복 여부
+     */
+    boolean existsByRequestId(String requestId);
 
 }

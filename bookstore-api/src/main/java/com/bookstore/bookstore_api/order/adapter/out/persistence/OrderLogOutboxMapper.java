@@ -38,5 +38,30 @@ public interface OrderLogOutboxMapper {
      * @param maxRetry  최대 재시도 횟수 (초과 시 FAILED로 변경)
      * @return 업데이트된 행 수
      */
-    int updateRetryAndError(@Param("id") Long id, @Param("lastError") String lastError, @Param("maxRetry") int maxRetry);
+    int updateRetryAndError(@Param("id") Long id, @Param("lastError") String lastError,
+            @Param("maxRetry") int maxRetry);
+
+    /**
+     * ID로 Outbox 조회
+     * 
+     * @param id Outbox ID
+     * @return OrderLogOutboxEntity
+     */
+    OrderLogOutboxEntity findById(@Param("id") Long id);
+
+    /**
+     * Outbox 업데이트
+     * 
+     * @param orderLogOutboxEntity
+     * @return 업데이트된 행 수
+     */
+    int update(OrderLogOutboxEntity orderLogOutboxEntity);
+
+    /**
+     * FAILED 상태의 Outbox 레코드 조회
+     * 
+     * @param limit 최대 조회 개수
+     * @return FAILED 상태의 Outbox 목록
+     */
+    List<OrderLogOutboxEntity> findFailedWithLimit(@Param("limit") int limit);
 }

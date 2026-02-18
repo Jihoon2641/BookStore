@@ -1,16 +1,64 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="INFO">
+<Configuration status="WARN">
     <Appenders>
         <Console name="Console" target="SYSTEM_OUT">
-            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%X{requestId}] [%X{uri}] [%X{clientIp}] [%-5level] [%thread] %logger{36} - %msg%n"/>
         </Console>
+
+        <RollingFile name="InfoFile" 
+                     fileName="logs/info.log"
+                     filePattern="logs/info-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level [%X{requestId}] [%X{uri}] [%X{clientIp}] [%X{userAgent}] %logger{36} - %msg%n"/>
+
+            <Filters>
+                <ThresholdFilter level="WARN" onMatch="DENY" onMismatch="NEUTRAL"/>
+                <ThresholdFilter level="INFO" onMatch="ACCEPT" onMismatch="DENY"/>
+            </Filters>
+            
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="100MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="30"/>
+        </RollingFile>
+
+        <RollingFile name="WarnFile" 
+                     fileName="logs/warn.log"
+                     filePattern="logs/warn-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level [%X{requestId}] [%X{uri}] [%X{clientIp}] [%X{userAgent}] %logger{36} - %msg%n"/>
+            
+            <Filters>
+                <ThresholdFilter level="ERROR" onMatch="DENY" onMismatch="NEUTRAL"/>
+                <ThresholdFilter level="WARN" onMatch="ACCEPT" onMismatch="DENY"/>
+            </Filters>
+            
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="100MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="30"/>
+        </RollingFile>
+
+        <RollingFile name="ErrorFile" 
+                     fileName="logs/error.log"
+                     filePattern="logs/error-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level [%X{requestId}] [%X{uri}] [%X{clientIp}] [%X{userAgent}] %logger{36} - %msg%n"/>
+            
+            <ThresholdFilter level="ERROR" onMatch="ACCEPT" onMismatch="DENY"/>
+            
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="100MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="30"/>
+        </RollingFile>
     </Appenders>
     <Loggers>
         <Root level="info">
             <AppenderRef ref="Console"/>
+            <AppenderRef ref="InfoFile"/>
+            <AppenderRef ref="WarnFile"/>
+            <AppenderRef ref="ErrorFile"/>
         </Root>
-        <Logger name="com.bookstore" level="debug" additivity="false">
-            <AppenderRef ref="Console"/>
-        </Logger>
     </Loggers>
 </Configuration>
