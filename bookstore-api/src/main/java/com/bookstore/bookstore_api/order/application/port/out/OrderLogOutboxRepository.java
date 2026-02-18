@@ -12,7 +12,7 @@ public interface OrderLogOutboxRepository {
      * @param orderLogOutBox 도메인 모델
      * @return 저장된 행 수
      */
-    int save(OrderLogOutBox orderLogOutBox);
+    OrderLogOutBox save(OrderLogOutBox orderLogOutBox);
 
     /**
      * PENDING 상태의 Outbox 레코드 조회
@@ -39,4 +39,28 @@ public interface OrderLogOutboxRepository {
      * @return 업데이트된 행 수
      */
     int markAsFailed(Long id, String lastError, int maxRetry);
-} 
+
+    /**
+     * FAILED 상태의 Outbox 레코드 조회
+     * 
+     * @param limit 최대 조회 개수
+     * @return FAILED 상태의 Outbox 목록
+     */
+    List<OrderLogOutBox> findFailedWithLimit(int limit);
+
+    /**
+     * ID로 Outbox 조회
+     * 
+     * @param id Outbox ID
+     * @return OrderLogOutBox
+     */
+    OrderLogOutBox findById(Long id);
+
+    /**
+     * Outbox 업데이트
+     * 
+     * @param orderLogOutBox
+     * @return OrderLogOutBox
+     */
+    OrderLogOutBox update(OrderLogOutBox orderLogOutBox);
+}

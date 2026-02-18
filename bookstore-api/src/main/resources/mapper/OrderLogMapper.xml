@@ -12,7 +12,8 @@
             result,
             failure_reason,
             created_at,
-            updated_at
+            updated_at,
+            request_id
         ) VALUES (
             #{orderId},
             #{userId},
@@ -21,8 +22,15 @@
             #{result},
             #{failureReason},
             NOW(),
-            NOW()
+            NOW(),
+            #{requestId}
         )
     </insert>
+
+    <select id="existsByRequestId" resultType="boolean">
+        SELECT EXISTS (
+            SELECT 1 FROM order_logs WHERE request_id = #{requestId}
+        )
+    </select>
 
 </mapper>

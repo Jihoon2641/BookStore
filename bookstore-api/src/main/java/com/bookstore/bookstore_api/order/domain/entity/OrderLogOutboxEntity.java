@@ -25,7 +25,8 @@ import com.bookstore.bookstore_api.common.outboxEnum.OutboxStatus;
 @AllArgsConstructor
 public class OrderLogOutboxEntity {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "order_id")
@@ -51,4 +52,8 @@ public class OrderLogOutboxEntity {
 
     @Column(name = "last_error", columnDefinition = "TEXT")
     private String lastError;
+
+    @Column(name = "request_id", unique = true)
+    private String requestId;
+
 }

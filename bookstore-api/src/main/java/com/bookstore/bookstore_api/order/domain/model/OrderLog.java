@@ -1,6 +1,7 @@
 package com.bookstore.bookstore_api.order.domain.model;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import com.bookstore.bookstore_api.order.domain.entity.OrderStatus;
@@ -9,6 +10,7 @@ import com.bookstore.bookstore_api.order.domain.entity.OrderResult;
 @Schema(description = "주문 로그 정보")
 @Getter
 @AllArgsConstructor
+@Builder
 public class OrderLog {
 
     @Schema(description = "주문 로그 ID")
@@ -25,6 +27,8 @@ public class OrderLog {
     private OrderResult result;
     @Schema(description = "실패 이유")
     private String failureReason;
+    @Schema(description = "요청 ID")
+    private String requestId;
 
     /**
      * 신규 주문 로그 생성
@@ -39,22 +43,10 @@ public class OrderLog {
      * @return 신규 주문 로그 정보
      */
     public static OrderLog create(Long orderId, Long userId, OrderStatus previousStatus, OrderStatus currentStatus,
-            OrderResult result, String failureReason) {
+            OrderResult result, String failureReason, String requestId) {
         validateOrderId(orderId);
         validateUserId(userId);
-        return new OrderLog(null, orderId, userId, previousStatus, currentStatus, result, failureReason);
-    }
-
-    /**
-     * 주문 실패 로그 생성
-     * 
-     * @param userId        사용자 ID
-     * @param failureReason 실패 이유
-     * @return 실패 주문 로그 정보
-     */
-    public static OrderLog createFailure(Long userId, String failureReason) {
-        validateUserId(userId);
-        return new OrderLog(null, null, userId, null, OrderStatus.FAILED, OrderResult.FAILURE, failureReason);
+        return new OrderLog(null, orderId, userId, previousStatus, currentStatus, result, failureReason, requestId);
     }
 
     /* =============== 검증 메서드 =============== */

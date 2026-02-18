@@ -19,14 +19,23 @@ public class OrderLogOutboxAdapter implements OrderLogOutboxRepository {
     private final OrderLogOutboxConverter orderLogOutboxConverter;
 
     @Override
-    public int save(OrderLogOutBox orderLogOutBox) {
+    public OrderLogOutBox save(OrderLogOutBox orderLogOutBox) {
         OrderLogOutboxEntity entity = orderLogOutboxConverter.toEntity(orderLogOutBox);
-        return orderLogOutboxMapper.save(entity);
+        orderLogOutboxMapper.save(entity);
+        return orderLogOutboxConverter.toModel(entity);
     }
 
     @Override
     public List<OrderLogOutBox> findPendingWithLimit(int limit) {
         List<OrderLogOutboxEntity> entities = orderLogOutboxMapper.findPendingWithLimit(limit);
+        return entities.stream()
+                .map(orderLogOutboxConverter::toModel)
+                .toList();
+    }
+
+    @Override
+    public List<OrderLogOutBox> findFailedWithLimit(int limit) {
+        List<OrderLogOutboxEntity> entities = orderLogOutboxMapper.findFailedWithLimit(limit);
         return entities.stream()
                 .map(orderLogOutboxConverter::toModel)
                 .toList();
@@ -40,5 +49,18 @@ public class OrderLogOutboxAdapter implements OrderLogOutboxRepository {
     @Override
     public int markAsFailed(Long id, String lastError, int maxRetry) {
         return orderLogOutboxMapper.updateRetryAndError(id, lastError, maxRetry);
+    }
+
+    @Override
+    public OrderLogOutBox findById(Long id) {
+        OrderLogOutboxEntity entity = orderLogOutboxMapper.findById(id);
+        return orderLogOutboxConverter.toModel(entity);
+    }
+
+    @Override
+    public OrderLogOutBox update(OrderLogOutBox orderLogOutBox) {
+        OrderLogOutboxEntity entity = orderLogOutboxConverter.toEntity(orderLogOutBox);
+        orderLogOutboxMapper.update(entity);
+        return orderLogOutboxConverter.toModel(entity);
     }
 }
