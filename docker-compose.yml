@@ -19,52 +19,52 @@ services:
       retries: 5
     restart: unless-stopped
 
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.5.0
-    container_name: bookstore-zookeeper
-    ports:
-      - "2181:2181"
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    restart: unless-stopped
+  # zookeeper:
+  #   image: confluentinc/cp-zookeeper:7.5.0
+  #   container_name: bookstore-zookeeper
+  #   ports:
+  #     - "2181:2181"
+  #   environment:
+  #     ZOOKEEPER_CLIENT_PORT: 2181
+  #     ZOOKEEPER_TICK_TIME: 2000
+  #   restart: unless-stopped
 
-  kafka:
-    image: confluentinc/cp-kafka:7.5.0
-    container_name: bookstore-kafka
-    ports:
-      - "9092:9092"
-      - "29092:29092"
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-    depends_on:
-      - zookeeper
-    healthcheck:
-      test: [ "CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092" ]
-      interval: 10s
-      timeout: 10s
-      retries: 5
-    restart: unless-stopped
+  # kafka:
+  #   image: confluentinc/cp-kafka:7.5.0
+  #   container_name: bookstore-kafka
+  #   ports:
+  #     - "9092:9092"
+  #     - "29092:29092"
+  #   environment:
+  #     KAFKA_BROKER_ID: 1
+  #     KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+  #     KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+  #     KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+  #     KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+  #     KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+  #     KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+  #   depends_on:
+  #     - zookeeper
+  #   healthcheck:
+  #     test: [ "CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092" ]
+  #     interval: 10s
+  #     timeout: 10s
+  #     retries: 5
+  #   restart: unless-stopped
 
-  kafka-ui:
-    image: provectuslabs/kafka-ui:latest
-    container_name: bookstore-kafka-ui
-    ports:
-      - "8989:8080"
-    environment:
-      KAFKA_CLUSTERS_0_NAME: bookstore-kafka
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
-      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
-      DYNAMIC_CONFIG_ENABLED: "true"
-    depends_on:
-      - kafka
-    restart: unless-stopped
+  # kafka-ui:
+  #   image: provectuslabs/kafka-ui:latest
+  #   container_name: bookstore-kafka-ui
+  #   ports:
+  #     - "8989:8080"
+  #   environment:
+  #     KAFKA_CLUSTERS_0_NAME: bookstore-kafka
+  #     KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+  #     KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+  #     DYNAMIC_CONFIG_ENABLED: "true"
+  #   depends_on:
+  #     - kafka
+  #   restart: unless-stopped
 
   bookstore-api:
     build:
@@ -85,8 +85,6 @@ services:
       PROMETHEUS_BASE_URL: http://prometheus:9090
     depends_on:
       bookstore-db:
-        condition: service_healthy
-      kafka:
         condition: service_healthy
     restart: unless-stopped
 
