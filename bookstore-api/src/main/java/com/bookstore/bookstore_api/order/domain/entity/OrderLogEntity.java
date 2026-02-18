@@ -48,4 +48,7 @@ public class OrderLogEntity extends BaseEntity {
     @Column(name = "failure_reason", columnDefinition = "TEXT")
     private String failureReason;
 
+    @Column(name = "request_id", nullable = false, unique = true)
+    private String requestId;
+
 }

@@ -37,4 +37,9 @@ public class OrderLogAdapter implements OrderLogRepository {
         return orderLogConverter.toModel(orderLogEntity);
     }
 
+    @Override
+    public boolean existsByRequestId(String requestId) {
+        return orderLogMapper.existsByRequestId(requestId);
+    }
+
 }

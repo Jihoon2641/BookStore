@@ -13,9 +13,10 @@
         <result property="sentAt" column="sent_at"/>
         <result property="retryCount" column="retry_count"/>
         <result property="lastError" column="last_error"/>
+        <result property="requestId" column="request_id"/>
     </resultMap>
 
-    <insert id="save" parameterType="OrderLogOutboxEntity">
+    <insert id="save" parameterType="OrderLogOutboxEntity" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO order_log_outbox (
             order_id,
             user_id,
@@ -24,7 +25,8 @@
             created_at,
             sent_at,
             retry_count,
-            last_error
+            last_error,
+            request_id
         ) VALUES (
             #{orderId},
             #{userId},
@@ -33,7 +35,8 @@
             #{createdAt},
             #{sentAt},
             #{retryCount},
-            #{lastError}
+            #{lastError},
+            #{requestId}
         )
     </insert>
 
@@ -58,5 +61,28 @@
             status = CASE WHEN retry_count >= #{maxRetry} THEN 'FAILED' ELSE status END
         WHERE id = #{id}
     </update>
+
+    <select id="findById" resultMap="OrderLogOutboxResultMap">
+        SELECT id, order_id, user_id, payload, status, created_at, sent_at, retry_count, last_error, request_id
+        FROM order_log_outbox
+        WHERE id = #{id}
+    </select>
+
+    <update id="update" parameterType="OrderLogOutboxEntity">
+        UPDATE order_log_outbox
+        SET status = #{status},
+            sent_at = #{sentAt},
+            retry_count = #{retryCount},
+            last_error = #{lastError}
+        WHERE id = #{id}
+    </update>
+
+    <select id="findFailedWithLimit" resultMap="OrderLogOutboxResultMap">
+        SELECT id, order_id, user_id, payload, status, created_at, sent_at, retry_count, last_error
+        FROM order_log_outbox
+        WHERE status = 'FAILED'
+        ORDER BY created_at ASC
+        LIMIT #{limit}
+    </select>
 
 </mapper>

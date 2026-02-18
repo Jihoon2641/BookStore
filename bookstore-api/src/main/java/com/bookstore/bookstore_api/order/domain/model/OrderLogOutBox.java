@@ -31,9 +31,12 @@ public class OrderLogOutBox {
     private int retryCount;
     @Schema(description = "마지막 에러")
     private String lastError;
+    @Schema(description = "요청 ID")
+    private String requestId;
 
     /**
      * OrderLogOutBox 생성
+     * 
      * @param id
      * @param orderId
      * @param userId
@@ -45,7 +48,8 @@ public class OrderLogOutBox {
      * @param lastError
      * @return
      */
-    public static OrderLogOutBox create(Long id, Long orderId, Long userId, String payload, OutboxStatus status, LocalDateTime createdAt, LocalDateTime sentAt, int retryCount, String lastError) {
+    public static OrderLogOutBox create(Long id, Long orderId, Long userId, String payload, OutboxStatus status,
+            LocalDateTime createdAt, LocalDateTime sentAt, int retryCount, String lastError, String requestId) {
         return OrderLogOutBox.builder()
                 .id(id)
                 .orderId(orderId)
@@ -56,6 +60,7 @@ public class OrderLogOutBox {
                 .sentAt(sentAt)
                 .retryCount(retryCount)
                 .lastError(lastError)
+                .requestId(requestId)
                 .build();
     }
 
@@ -67,7 +72,7 @@ public class OrderLogOutBox {
      * @param payload JSON payload
      * @return OrderLogOutBox
      */
-    public static OrderLogOutBox pending(Long orderId, Long userId, String payload) {
+    public static OrderLogOutBox pending(Long orderId, Long userId, String payload, String requestId) {
         return OrderLogOutBox.builder()
                 .orderId(orderId)
                 .userId(userId)
@@ -75,47 +80,70 @@ public class OrderLogOutBox {
                 .status(OutboxStatus.PENDING)
                 .createdAt(LocalDateTime.now())
                 .retryCount(0)
+                .requestId(requestId)
                 .build();
     }
 
     /**
-     * 신규 Outbox 레코드 생성 : FAILED 상태
+     * Outbox 레코드를 SENT 상태로 변경
      * 
-     * @param orderId 주문 ID
-     * @param userId  사용자 ID
-     * @param payload JSON payload
+     * @param sentAt 전송일시
+     * @return OrderLogOutBox
+     */
+    public OrderLogOutBox markAsSent(LocalDateTime sentAt) {
+        return OrderLogOutBox.builder()
+                .id(this.id)
+                .orderId(this.orderId)
+                .userId(this.userId)
+                .payload(this.payload)
+                .requestId(this.requestId)
+                .status(OutboxStatus.SENT)
+                .createdAt(this.createdAt)
+                .sentAt(sentAt)
+                .retryCount(this.retryCount)
+                .lastError(this.lastError)
+                .build();
+    }
+
+    /**
+     * Outbox 레코드를 FAILED 상태로 변경
+     * 
      * @param lastError 마지막 에러
      * @return OrderLogOutBox
      */
-    public static OrderLogOutBox failed(Long orderId, Long userId, String payload, String lastError) {
+    public OrderLogOutBox markAsFailed(String lastError) {
         return OrderLogOutBox.builder()
-                .orderId(orderId)
-                .userId(userId)
-                .payload(payload)
+                .id(this.id)
+                .orderId(this.orderId)
+                .userId(this.userId)
+                .payload(this.payload)
+                .requestId(this.requestId)
                 .status(OutboxStatus.FAILED)
-                .createdAt(LocalDateTime.now())
-                .retryCount(0)
+                .createdAt(this.createdAt)
+                .sentAt(this.sentAt)
+                .retryCount(this.retryCount)
                 .lastError(lastError)
                 .build();
     }
 
     /**
-     * 신규 Outbox 레코드 생성 : SENT 상태
+     * 재시도 횟수 증가
      * 
-     * @param orderId 주문 ID
-     * @param userId  사용자 ID
-     * @param payload JSON payload
      * @return OrderLogOutBox
      */
-    public static OrderLogOutBox sent(Long orderId, Long userId, String payload) {
+    public OrderLogOutBox incrementRetryCount() {
         return OrderLogOutBox.builder()
-                .orderId(orderId)
-                .userId(userId)
-                .payload(payload)
-                .status(OutboxStatus.SENT)
-                .createdAt(LocalDateTime.now())
-                .sentAt(LocalDateTime.now())
-                .retryCount(0)
+                .id(this.id)
+                .orderId(this.orderId)
+                .userId(this.userId)
+                .payload(this.payload)
+                .requestId(this.requestId)
+                .status(this.status)
+                .createdAt(this.createdAt)
+                .sentAt(this.sentAt)
+                .retryCount(this.retryCount + 1)
+                .lastError(this.lastError)
                 .build();
     }
+
 }
