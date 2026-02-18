@@ -73,6 +73,8 @@ services:
     container_name: bookstore-api
     ports:
       - "8080:8080"
+    volumes:
+      - bookstore-logs:/app/logs
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://bookstore-db:3306/bookstore
       SPRING_DATASOURCE_USERNAME: bookstore
@@ -170,3 +172,4 @@ volumes:
   bookstore-db-data:
   chromadb-data:
   prometheus-data:
+  bookstore-logs:
