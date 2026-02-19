@@ -38,6 +38,15 @@ public class LoggingAspect {
     public void applicationServiceLayer() {
     }
 
+    /**
+     * Scheduler
+     * 
+     * @param joinPoint
+     */
+    @Pointcut("within(com.bookstore.bookstore_api..scheduler..*)")
+    public void schedulerLayer() {
+    }
+
     @Before("webAdapterLayer()")
     public void logWebRequest(JoinPoint joinPoint) {
         ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
@@ -81,6 +90,33 @@ public class LoggingAspect {
         } catch (Exception e) {
             long endTime = System.currentTimeMillis() - startTime;
             log.error("[Service Error] {}.{} | Exception={} | Message={} - {}ms",
+                    proceedingJoinPoint.getTarget().getClass().getSimpleName(),
+                    methodName, e.getClass().getSimpleName(), e.getMessage(), endTime);
+            throw e;
+        }
+    }
+
+    @Around("schedulerLayer()")
+    public Object logSchedulerExecution(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
+        String methodName = proceedingJoinPoint.getSignature().getName();
+
+        log.info("[Scheduler Start] {}.{} | Params={}", proceedingJoinPoint.getTarget().getClass().getSimpleName(),
+                methodName, Arrays.toString(proceedingJoinPoint.getArgs()));
+
+        long startTime = System.currentTimeMillis();
+
+        try {
+            Object result = proceedingJoinPoint.proceed();
+
+            long endTime = System.currentTimeMillis() - startTime;
+
+            log.info("[Scheduler Success] {}.{} | {}ms", proceedingJoinPoint.getTarget().getClass().getSimpleName(),
+                    methodName, endTime);
+
+            return result;
+        } catch (Exception e) {
+            long endTime = System.currentTimeMillis() - startTime;
+            log.error("[Scheduler Error] {}.{} | Exception={} | Message={} - {}ms",
                     proceedingJoinPoint.getTarget().getClass().getSimpleName(),
                     methodName, e.getClass().getSimpleName(), e.getMessage(), endTime);
             throw e;
