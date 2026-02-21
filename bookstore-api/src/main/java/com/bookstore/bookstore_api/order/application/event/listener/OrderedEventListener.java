@@ -1,7 +1,5 @@
 package com.bookstore.bookstore_api.order.application.event.listener;
 
-import java.util.concurrent.BlockingQueue;
-
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
@@ -27,11 +25,10 @@ public class OrderedEventListener {
 
     private final OrderLogOutboxRepository orderLogOutboxRepository;
     private final OrderLogRepository orderLogRepository;
-    private final BlockingQueue<Long> orderLogQueue;
     private final OrderLogOutboxService orderLogOutboxService;
 
     @Async("logTaskExecutor")
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleOrderedLogEvent(OrderLogCreatedEvent event) {
 
@@ -70,16 +67,7 @@ public class OrderedEventListener {
         } catch (Exception e) {
             log.error("OrderLog 저장 실패 - OutboxId: {}, Error: {}",
                     event.getOutboxId(), e.getMessage(), e);
-
-            // 실패 시 BlockingQueue에 적재
-            boolean queued = orderLogQueue.offer(event.getOutboxId());
-
-            if (queued) {
-                log.info("큐에 적재 성공 - OutboxId: {}", event.getOutboxId());
-            } else {
-                log.error("큐가 꽉 참 - OutboxId: {}", event.getOutboxId());
-                orderLogOutboxService.markAsFailed(event.getOutboxId(), e.getMessage());
-            }
+            orderLogOutboxService.markAsFailed(event.getOutboxId(), e.getMessage());
         }
     }
 }

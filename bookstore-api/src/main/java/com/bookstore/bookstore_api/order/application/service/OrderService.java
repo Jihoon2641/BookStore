@@ -1,11 +1,9 @@
 package com.bookstore.bookstore_api.order.application.service;
 
-import java.util.concurrent.BlockingQueue;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.core.task.TaskRejectedException;
+
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -53,7 +51,6 @@ public class OrderService implements OrderUseCase {
         private final OrderLogOutboxRepository orderLogOutboxRepository;
         private final ApplicationEventPublisher eventPublisher;
         private final OrderLogRepository orderLogRepository;
-        private final BlockingQueue<Long> orderLogQueue;
 
         @Override
         @Transactional
@@ -135,7 +132,7 @@ public class OrderService implements OrderUseCase {
                         OrderLogOutBox savedOutbox = orderLogOutboxRepository.save(outbox);
 
                         // 이벤트 발행
-                        publishEventSafely(savedOutbox.getId());
+                        eventPublisher.publishEvent(new OrderLogCreatedEvent(savedOutbox.getId()));
 
                         return savedOrder;
 
@@ -154,23 +151,6 @@ public class OrderService implements OrderUseCase {
                         orderLogRepository.save(orderLog);
 
                         throw new RuntimeException("주문 생성에 실패하였습니다. " + e.getMessage());
-                }
-        }
-
-        /**
-         * 이벤트 발행 - TaskRejectedException 발생 시 BlockingQueue에 적재
-         * 이벤트 발행 실패는 주문 실패로 이어지지 않음
-         */
-        private void publishEventSafely(Long outboxId) {
-                try {
-                        eventPublisher.publishEvent(new OrderLogCreatedEvent(outboxId));
-                } catch (TaskRejectedException e) {
-                        log.warn("스레드 풀 포화 - OutboxId: {} BlockingQueue에 적재, Error: {}", outboxId, e.getMessage());
-                        boolean queued = orderLogQueue.offer(outboxId);
-                        if (!queued) {
-                                log.error("BlockingQueue도 가득 참 - OutboxId: {}. processPendingOutbox 스케줄러가 처리 예정.",
-                                                outboxId);
-                        }
                 }
         }
 

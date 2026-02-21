@@ -73,8 +73,9 @@ public class SecurityConfig {
                                                 .anyRequest().authenticated())
                                 // RequestLoggingFilter -> JwtAuthenticationFilter ->
                                 // UsernamePasswordAuthenticationFilter 순서
-                                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-                                .addFilterBefore(requestLoggingFilter, JwtAuthenticationFilter.class);
+                                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+                // .addFilterBefore(requestLoggingFilter, JwtAuthenticationFilter.class); // 임시
+                // 비활성화
 
                 return http.build();
         }
