@@ -16,7 +16,11 @@ public record MonitoringOverviewResponse(
             Double dbPoolActive,
             Double dbPoolMax,
             Double hostCpuPct,
-            Double hostMemPct) {
+            Double hostMemPct,
+            Double diskUsagePct,
+            Double diskIoUtilizationPct,
+            Double networkRxKbs,
+            Double networkTxKbs) {
     }
 
     public record TrafficUsage(

@@ -53,6 +53,10 @@ public class MonitoringService implements MonitoringUseCase {
         Double dbPoolMax = getGaugeValue("hikaricp.connections.max");
         Double hostCpuPct = getHostCpuPct();
         Double hostMemPct = getHostMemPct();
+        Double diskUsagePct = getDiskUsagePct();
+        Double diskIoUtilizationPct = getDiskIoUtilizationPct();
+        Double networkRxKbs = getNetworkRxKbs();
+        Double networkTxKbs = getNetworkTxKbs();
 
         TrafficMetrics trafficMetrics = calculateTrafficMetrics(health.uptimeSec());
 
@@ -64,7 +68,11 @@ public class MonitoringService implements MonitoringUseCase {
                 round(dbPoolActive),
                 round(dbPoolMax),
                 round(hostCpuPct),
-                round(hostMemPct));
+                round(hostMemPct),
+                round(diskUsagePct),
+                round(diskIoUtilizationPct),
+                round(networkRxKbs),
+                round(networkTxKbs));
 
         MonitoringOverviewResponse.TrafficUsage traffic = new MonitoringOverviewResponse.TrafficUsage(
                 round(trafficMetrics.requestsPerSecond()),
@@ -166,12 +174,32 @@ public class MonitoringService implements MonitoringUseCase {
     }
 
     private Double getHostCpuPct() {
-        String query = "100 - (avg by(instance)(rate(node_cpu_seconds_total{mode=\"idle\"}[1m])) * 100)";
+        String query = "100 - (avg(rate(node_cpu_seconds_total{job=\"node-exporter\",mode=\"idle\"}[1m])) * 100)";
         return prometheusQueryAdapter.queryScalar(query).orElse(null);
     }
 
     private Double getHostMemPct() {
-        String query = "(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100";
+        String query = "avg((1 - (node_memory_MemAvailable_bytes{job=\"node-exporter\"} / node_memory_MemTotal_bytes{job=\"node-exporter\"})) * 100)";
+        return prometheusQueryAdapter.queryScalar(query).orElse(null);
+    }
+
+    private Double getDiskUsagePct() {
+        String query = "avg(100 * (1 - (node_filesystem_avail_bytes{job=\"node-exporter\",mountpoint=\"/\",fstype!~\"tmpfs|overlay|squashfs|nsfs\"} / node_filesystem_size_bytes{job=\"node-exporter\",mountpoint=\"/\",fstype!~\"tmpfs|overlay|squashfs|nsfs\"})))";
+        return prometheusQueryAdapter.queryScalar(query).orElse(null);
+    }
+
+    private Double getDiskIoUtilizationPct() {
+        String query = "max(rate(node_disk_io_time_seconds_total{job=\"node-exporter\",device!~\"^(loop|ram|fd|sr|dm-).*\"}[1m])) * 100";
+        return prometheusQueryAdapter.queryScalar(query).orElse(null);
+    }
+
+    private Double getNetworkRxKbs() {
+        String query = "sum(rate(node_network_receive_bytes_total{job=\"node-exporter\",device!~\"^(lo|docker.*|veth.*|br-.*|cni.*)$\"}[1m])) / 1024";
+        return prometheusQueryAdapter.queryScalar(query).orElse(null);
+    }
+
+    private Double getNetworkTxKbs() {
+        String query = "sum(rate(node_network_transmit_bytes_total{job=\"node-exporter\",device!~\"^(lo|docker.*|veth.*|br-.*|cni.*)$\"}[1m])) / 1024";
         return prometheusQueryAdapter.queryScalar(query).orElse(null);
     }
 

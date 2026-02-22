@@ -29,7 +29,7 @@ public class AdminMonitoringController {
 
     private final MonitoringUseCase monitoringUseCase;
 
-    @Operation(summary = "모니터링 요약", description = "React 대시보드 카드용 요약 데이터(앱 + 호스트)")
+    @Operation(summary = "모니터링 요약", description = "React 대시보드 카드용 요약 데이터(앱 + 호스트 + 디스크/네트워크)")
     @GetMapping("/overview")
     public ResponseEntity<ApiResponse<MonitoringOverviewResponse>> getOverview() {
         MonitoringOverviewResponse overview = monitoringUseCase.getOverview();
