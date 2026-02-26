@@ -128,21 +128,4 @@
 - 보안/로깅
   - JWT + FilterChain + RateLimit + Bot detection + Log4j2 구성
 
----
 
-## 실행/운영 포인트
-
-- 공통(필수)
-  - Java 21, Node 20, Python 3.11 권장
-  - 각 모듈별 환경변수는 별도 `.env` 사용
-- Docker
-  - `docker-compose up -d`로 MySQL, backend, frontend proxy, NL2SQL, Prometheus, Node Exporter까지 일괄 실행 가능
-  - 외부 노출 포트(요약): `8080`, `3039`, `8001`, `9090`, `9100`, `8000`
-
----
-
-## 주의/보완 포인트(문서화 권장)
-
-- 패스워드는 현재 평문 비교/저장이 확인됨(요청/운영 문서에 보안 강화 필요)
-- NL2SQL은 상태(stateful) 세션 기반으로 동작하여 동시 다중 세션 관리 정책(세션 만료/저장소 분리) 고려 필요
-- `.env` 파일에 실제 키가 포함되어 있으므로 운영 저장소에서는 비밀관리(Secret Manager)로 전환 권장
