@@ -66,6 +66,6 @@ public class OrderLogOutboxAdapter implements OrderLogOutboxRepository {
 
     @Override
     public int resetFailedToPending(Long id) {
-        return orderLogOutboxMapper.resultFailedToPending(id);
+        return orderLogOutboxMapper.resetFailedToPending(id);
     }
 }

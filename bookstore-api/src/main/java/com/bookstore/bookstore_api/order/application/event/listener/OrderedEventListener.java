@@ -1,11 +1,10 @@
 package com.bookstore.bookstore_api.order.application.event.listener;
 
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.event.TransactionPhase;
-import org.springframework.transaction.event.TransactionalEventListener;
 
 import com.bookstore.bookstore_api.order.application.event.object.OrderLogCreatedEvent;
 import com.bookstore.bookstore_api.order.application.port.out.OrderLogRepository;
@@ -28,7 +27,7 @@ public class OrderedEventListener {
     private final OrderLogOutboxService orderLogOutboxService;
 
     @Async("logTaskExecutor")
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
+    @EventListener
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleOrderedLogEvent(OrderLogCreatedEvent event) {
 

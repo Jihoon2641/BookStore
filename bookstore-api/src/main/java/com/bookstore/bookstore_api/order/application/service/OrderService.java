@@ -2,7 +2,6 @@ package com.bookstore.bookstore_api.order.application.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationEventPublisher;
 
 import org.springframework.stereotype.Service;
 
@@ -28,7 +27,6 @@ import com.bookstore.bookstore_api.order.application.port.in.OrderItemCommand;
 import com.bookstore.bookstore_api.order.application.port.out.OrderLogOutboxRepository;
 import com.bookstore.bookstore_api.order.application.port.out.OrderLogRepository;
 import com.bookstore.bookstore_api.product.domain.model.Book;
-import com.bookstore.bookstore_api.order.application.event.object.OrderLogCreatedEvent;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -49,7 +47,6 @@ public class OrderService implements OrderUseCase {
         private final OrderItemRepository orderItemRepository;
         private final ProductRepository productRepository;
         private final OrderLogOutboxRepository orderLogOutboxRepository;
-        private final ApplicationEventPublisher eventPublisher;
         private final OrderLogRepository orderLogRepository;
 
         @Override
@@ -129,10 +126,7 @@ public class OrderService implements OrderUseCase {
                                         orderLogPayload.toJson(),
                                         orderLogPayload.getRequestId());
 
-                        OrderLogOutBox savedOutbox = orderLogOutboxRepository.save(outbox);
-
-                        // 이벤트 발행
-                        eventPublisher.publishEvent(new OrderLogCreatedEvent(savedOutbox.getId()));
+                        orderLogOutboxRepository.save(outbox);
 
                         return savedOrder;
 

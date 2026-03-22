@@ -71,5 +71,5 @@ public interface OrderLogOutboxMapper {
      * @param id
      * @return
      */
-    int resultFailedToPending(@Param("id") Long id);
+    int resetFailedToPending(@Param("id") Long id);
 }
