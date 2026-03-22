@@ -63,4 +63,12 @@ public interface OrderLogOutboxRepository {
      * @return OrderLogOutBox
      */
     OrderLogOutBox update(OrderLogOutBox orderLogOutBox);
+
+    /**
+     * FAILED 상태를 PENDING으로 되돌림 (Debezium이 읽을 수 있도록)
+     * 
+     * @param id
+     * @return
+     */
+    int resetFailedToPending(Long id);
 }

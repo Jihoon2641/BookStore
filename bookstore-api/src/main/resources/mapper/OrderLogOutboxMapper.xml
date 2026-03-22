@@ -85,4 +85,12 @@
         LIMIT #{limit}
     </select>
 
+    <update id="resetFailedToPending">
+        UPDATE order_log_outbox
+        SET status = 'PENDING',
+            last_error = NULL
+        WHERE id = #{id}
+            AND status = 'FAILED'
+    </update>
+
 </mapper>

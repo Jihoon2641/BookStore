@@ -64,4 +64,12 @@ public interface OrderLogOutboxMapper {
      * @return FAILED 상태의 Outbox 목록
      */
     List<OrderLogOutboxEntity> findFailedWithLimit(@Param("limit") int limit);
+
+    /**
+     * FAILED 상태를 PENDING으로 되돌림 (Debezium이 읽을 수 있도록)
+     * 
+     * @param id
+     * @return
+     */
+    int resultFailedToPending(@Param("id") Long id);
 }
