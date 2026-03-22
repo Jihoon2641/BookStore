@@ -27,6 +27,10 @@ public class OrderedEventListener {
     private final OrderLogOutboxService orderLogOutboxService;
 
     @Async("logTaskExecutor")
+    /*
+     * @TranscationalEventListener -> EventListener : Debezium이 binlog를 읽는다는 것 자체가
+     * 이미 커밋 되었다는 증거이기 때문에 변경
+     */
     @EventListener
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleOrderedLogEvent(OrderLogCreatedEvent event) {
