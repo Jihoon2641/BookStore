@@ -83,7 +83,7 @@ public class DebeziumConfig implements ApplicationRunner {
         props.setProperty("schema.history.internal.file.filename", historyFile);
 
         // 앱 시작 시 기존 데이터 재처리 방지
-        props.setProperty("snapshot.mode", "never");
+        props.setProperty("snapshot.mode", "schema_only");
 
         // topic prefix (내부 식별자용)
         props.setProperty("topic.prefix", "bookstore");
@@ -104,24 +104,33 @@ public class DebeziumConfig implements ApplicationRunner {
 
         try {
             JsonNode root = objectMapper.readTree(event.value());
-            JsonNode payload = root.get("payload");
-            if (payload == null)
+            JsonNode payload = root.path("payload");
+            if (payload.isMissingNode() || payload.isNull())
                 return;
 
-            String op = payload.get("op").asText();
-            JsonNode after = root.get("after");
-            if (after == null)
+            JsonNode opNode = payload.get("op");
+            if (opNode == null || opNode.isNull())
+                return;
+            String op = opNode.asText();
+
+            JsonNode after = payload.get("after");
+            if (after == null || after.isNull())
                 return;
 
-            String status = after.get("status").asText();
-            Long outboxId = after.get("id").asLong();
+            JsonNode statusNode = after.get("status");
+            JsonNode outboxIdNode = after.get("id");
+            if (statusNode == null || statusNode.isNull() || outboxIdNode == null || outboxIdNode.isNull())
+                return;
+
+            String status = statusNode.asText();
+            Long outboxId = outboxIdNode.asLong();
 
             // INSERT 또는 UPDATE -> PENDING 으로 변경된 경우만 처리
             if ("c".equals(op) || ("u".equals(op) && "PENDING".equals(status))) {
                 log.info("Debezium 이벤트 감지 - op: {}, outboxId: {}, status: {}", op, outboxId, status);
                 eventPublisher.publishEvent(new OrderLogCreatedEvent(outboxId));
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("Debezium 이벤트 처리 중 에러", e);
         }
     }

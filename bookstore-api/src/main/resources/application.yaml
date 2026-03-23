@@ -58,7 +58,7 @@ monitoring:
 debezium:
   name: bookstore-connector
   database:
-    hostname: localhost
+    hostname: host.docker.internal
     port: 3306
     name: bookstore
     username: bookstore
