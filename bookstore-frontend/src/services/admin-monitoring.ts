@@ -29,6 +29,10 @@ export type MonitoringResourceUsage = {
   dbPoolMax: number | null;
   hostCpuPct: number | null;
   hostMemPct: number | null;
+  diskUsagePct: number | null;
+  diskIoUtilizationPct: number | null;
+  networkRxKbs: number | null;
+  networkTxKbs: number | null;
 };
 
 export type MonitoringTrafficUsage = {

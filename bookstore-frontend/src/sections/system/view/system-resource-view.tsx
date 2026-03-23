@@ -43,6 +43,13 @@ type SnapshotMetric = {
   value: number | null;
 };
 
+type SummaryItem = {
+  title: string;
+  value: string;
+  detail: string;
+  tone: 'success' | 'warning' | 'error' | 'info';
+};
+
 const POLLING_INTERVAL_MS = 15000;
 const MAX_POINTS = 30;
 
@@ -73,6 +80,14 @@ function formatMetric(value: number | null, suffix = ''): string {
   }
 
   return `${fNumber(value)}${suffix}`;
+}
+
+function formatPercent(value: number | null): string {
+  if (value === null) {
+    return 'No data';
+  }
+
+  return `${fNumber(value, { maximumFractionDigits: 2 })}%`;
 }
 
 function formatUptime(uptimeSec: number): string {
@@ -169,27 +184,43 @@ export function SystemResourceView() {
   const categories = trend.map((point) => point.label);
   const labelStep = Math.max(1, Math.ceil(categories.length / 8));
   const sparseCategories = categories.map((label, index) => (index % labelStep === 0 ? label : ''));
+  const dbPoolUsageNow = buildDbPoolUsage(resources);
+  const heapUsedMb = resources?.heapUsedMb ?? null;
+  const heapMaxMb = resources?.heapMaxMb ?? null;
+  const heapFreeMb = heapUsedMb !== null && heapMaxMb !== null ? Math.max(heapMaxMb - heapUsedMb, 0) : null;
+  const successRateNow =
+    traffic?.errorRate5xxPct !== null && traffic?.errorRate5xxPct !== undefined
+      ? Math.max(100 - traffic.errorRate5xxPct, 0)
+      : null;
 
-  const serviceChartOptions = useChart({
-    stroke: { width: 3, curve: 'straight' },
-    markers: { size: 4 },
-    xaxis: { categories },
-    yaxis: {
-      min: 0,
-      max: 1,
-      tickAmount: 1,
-      labels: {
-        formatter: (value: number) => (value >= 0.5 ? 'UP' : 'DOWN'),
-      },
+  const summaryItems: SummaryItem[] = [
+    {
+      title: 'Service',
+      value: status?.service ?? 'UNKNOWN',
+      detail: status ? `Uptime ${formatUptime(status.uptimeSec)}` : 'Uptime No data',
+      tone: status?.service === 'UP' ? 'success' : 'warning',
     },
-    tooltip: {
-      y: {
-        formatter: (value: number) => (value >= 0.5 ? 'UP' : 'DOWN'),
-      },
+    {
+      title: 'App CPU / Heap',
+      value: `${formatPercent(resources?.appCpuPct ?? null)} / ${formatPercent(resources?.heapUsedPct ?? null)}`,
+      detail: `Heap ${formatMetric(resources?.heapUsedMb ?? null, ' MB')} / ${formatMetric(resources?.heapMaxMb ?? null, ' MB')}`,
+      tone: 'info',
     },
-  });
+    {
+      title: 'DB Pool',
+      value: `${formatMetric(resources?.dbPoolActive ?? null)} / ${formatMetric(resources?.dbPoolMax ?? null)}`,
+      detail: `Utilization ${formatPercent(dbPoolUsageNow)}`,
+      tone: dbPoolUsageNow !== null && dbPoolUsageNow > 80 ? 'warning' : 'success',
+    },
+    {
+      title: 'Traffic',
+      value: `${formatMetric(traffic?.requestsPerSecond ?? null)} req/s`,
+      detail: `Latency ${formatMetric(traffic?.avgLatencyMs ?? null, ' ms')} | 5xx ${formatPercent(traffic?.errorRate5xxPct ?? null)}`,
+      tone: (traffic?.errorRate5xxPct ?? 0) > 1 ? 'error' : 'success',
+    },
+  ];
 
-  const resourceChartOptions = useChart({
+  const resourceSnapshotOptions = useChart({
     xaxis: { categories: snapshotMetrics.map((metric) => metric.label), max: 100 },
     yaxis: { min: 0, max: 100, tickAmount: 5 },
     plotOptions: {
@@ -209,20 +240,17 @@ export function SystemResourceView() {
     },
   });
 
-  const trafficRpsOptions = useChart({
+  const resourceTrendOptions = useChart({
+    legend: { show: true, position: 'top', horizontalAlign: 'left' },
     xaxis: { categories: sparseCategories, labels: { hideOverlappingLabels: true } },
-    stroke: { width: 2.5, curve: 'smooth' },
-    tooltip: {
-      y: {
-        formatter: (value: number) => `${value.toFixed(2)} req/s`,
+    yaxis: {
+      min: 0,
+      max: 100,
+      tickAmount: 5,
+      labels: {
+        formatter: (value: number) => `${value.toFixed(0)}%`,
       },
     },
-  });
-
-  const trafficErrorOptions = useChart({
-    xaxis: { categories: sparseCategories, labels: { hideOverlappingLabels: true } },
-    stroke: { width: 2.5, curve: 'smooth' },
-    yaxis: { min: 0, max: 100, tickAmount: 5 },
     tooltip: {
       y: {
         formatter: (value: number) => `${value.toFixed(2)}%`,
@@ -230,12 +258,97 @@ export function SystemResourceView() {
     },
   });
 
-  const trafficLatencyOptions = useChart({
+  const trafficTrendOptions = useChart({
+    chart: { stacked: false },
+    legend: { show: true, position: 'top', horizontalAlign: 'left' },
     xaxis: { categories: sparseCategories, labels: { hideOverlappingLabels: true } },
-    stroke: { width: 2.5, curve: 'smooth' },
+    stroke: { width: [3, 3], curve: 'smooth' },
+    fill: { type: ['solid', 'gradient'], opacity: [1, 0.2] },
+    yaxis: [
+      {
+        title: {
+          text: 'Requests/s',
+        },
+        labels: {
+          formatter: (value: number) => value.toFixed(2),
+        },
+      },
+      {
+        opposite: true,
+        title: {
+          text: 'Latency (ms)',
+        },
+        labels: {
+          formatter: (value: number) => value.toFixed(0),
+        },
+      },
+    ],
+    tooltip: {
+      shared: true,
+      intersect: false,
+      y: {
+        formatter: (value: number, context?: { seriesIndex?: number }) => {
+          if (context?.seriesIndex === 0) {
+            return `${value.toFixed(2)} req/s`;
+          }
+          return `${value.toFixed(2)} ms`;
+        },
+      },
+    },
+  });
+
+  const serviceReliabilityOptions = useChart({
+    legend: { show: true, position: 'top', horizontalAlign: 'left' },
+    xaxis: { categories: sparseCategories, labels: { hideOverlappingLabels: true } },
+    stroke: { width: [3, 2.5], curve: 'smooth' },
+    fill: { type: ['solid', 'gradient'], opacity: [1, 0.2] },
+    yaxis: [
+      {
+        min: 0,
+        max: 1,
+        tickAmount: 1,
+        labels: {
+          formatter: (value: number) => (value >= 0.5 ? 'UP' : 'DOWN'),
+        },
+      },
+      {
+        min: 0,
+        max: 100,
+        tickAmount: 5,
+        opposite: true,
+        labels: {
+          formatter: (value: number) => `${value.toFixed(0)}%`,
+        },
+      },
+    ],
     tooltip: {
       y: {
-        formatter: (value: number) => `${value.toFixed(2)} ms`,
+        formatter: (value: number, context?: { seriesIndex?: number }) => {
+          if (context?.seriesIndex === 0) {
+            return value >= 0.5 ? 'UP' : 'DOWN';
+          }
+          return `${value.toFixed(2)}%`;
+        },
+      },
+    },
+  });
+
+  const trafficQualityOptions = useChart({
+    labels: ['Success', '5xx Error'],
+    legend: { show: true, position: 'bottom', horizontalAlign: 'center' },
+    tooltip: {
+      y: {
+        formatter: (value: number) => `${value.toFixed(2)}%`,
+      },
+    },
+  });
+
+  const heapSplitOptions = useChart({
+    labels: ['Heap Used', 'Heap Free'],
+    legend: { show: true, position: 'bottom', horizontalAlign: 'center' },
+    tooltip: {
+      y: {
+        formatter: (value: number) => `${value.toFixed(2)} MB`,
       },
     },
   });
@@ -277,67 +390,53 @@ export function SystemResourceView() {
 
       {!isLoading && overview && (
         <Grid container spacing={3}>
+          {summaryItems.map((item) => (
+            <Grid key={item.title} size={{ xs: 12, sm: 6, lg: 3 }}>
+              <Card sx={{ height: 1 }}>
+                <CardContent>
+                  <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
+                    <Typography variant="subtitle2" sx={{ color: 'text.secondary' }}>
+                      {item.title}
+                    </Typography>
+                    <Chip size="small" color={item.tone} label={item.tone === 'success' ? 'Good' : 'Check'} />
+                  </Stack>
+                  <Typography variant="h5" sx={{ mb: 1 }}>
+                    {item.value}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                    {item.detail}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+
           <Grid size={{ xs: 12, lg: 8 }}>
             <Card>
-              <CardHeader
-                title="Service Status Timeline"
-                action={<Chip label={status?.service ?? 'UNKNOWN'} size="small" color={status?.service === 'UP' ? 'success' : 'warning'} />}
-              />
+              <CardHeader title="Resource Trend (Line)" subheader="CPU / Memory / DB Pool utilization in percentage" />
               <Chart
                 type="line"
-                series={[{ name: 'Service', data: trend.map((point) => point.serviceState) }]}
-                options={serviceChartOptions}
-                sx={{ p: 2.5, pb: 1, height: 340 }}
+                series={[
+                  { name: 'App CPU', data: trend.map((point) => point.appCpuPct) },
+                  { name: 'Heap Used', data: trend.map((point) => point.heapUsedPct) },
+                  { name: 'Host CPU', data: trend.map((point) => point.hostCpuPct) },
+                  { name: 'Host Memory', data: trend.map((point) => point.hostMemPct) },
+                  { name: 'DB Pool', data: trend.map((point) => point.dbPoolUsagePct) },
+                ]}
+                options={resourceTrendOptions}
+                sx={{ p: 2.5, pb: 1, height: 360 }}
               />
             </Card>
           </Grid>
 
           <Grid size={{ xs: 12, lg: 4 }}>
-            <Card sx={{ height: 1 }}>
-              <CardHeader title="Overview Snapshot" />
-              <CardContent>
-                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                  Uptime: {status ? formatUptime(status.uptimeSec) : 'No data'}
-                </Typography>
-                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                  App CPU: {formatMetric(resources?.appCpuPct ?? null, '%')}
-                </Typography>
-                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                  Heap Used: {formatMetric(resources?.heapUsedPct ?? null, '%')}
-                </Typography>
-                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                  Heap: {formatMetric(resources?.heapUsedMb ?? null, ' MB')} /{' '}
-                  {formatMetric(resources?.heapMaxMb ?? null, ' MB')}
-                </Typography>
-                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                  DB Pool: {formatMetric(resources?.dbPoolActive ?? null)} /{' '}
-                  {formatMetric(resources?.dbPoolMax ?? null)}
-                </Typography>
-                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                  RPS: {formatMetric(traffic?.requestsPerSecond ?? null)}
-                </Typography>
-                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                  5xx Error: {formatMetric(traffic?.errorRate5xxPct ?? null, '%')}
-                </Typography>
-                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                  Avg latency: {formatMetric(traffic?.avgLatencyMs ?? null, ' ms')}
-                </Typography>
-                <Typography variant="caption" sx={{ mt: 1.5, display: 'block', color: 'text.secondary' }}>
-                  Last updated: {new Date(overview.generatedAt).toLocaleString()}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid size={{ xs: 12 }}>
             <Card>
               <CardHeader
-                title="Resource Usage"
-                subheader="Percentage"
+                title="Current Resource Snapshot (Bar)"
                 action={
                   <Chip
                     size="small"
-                    label={snapshotMissing.length > 0 ? `No data: ${snapshotMissing.join(', ')}` : 'All metrics available'}
+                    label={snapshotMissing.length > 0 ? `No data ${snapshotMissing.length}` : 'Complete'}
                     color={snapshotMissing.length > 0 ? 'warning' : 'success'}
                   />
                 }
@@ -350,60 +449,82 @@ export function SystemResourceView() {
                     data: snapshotMetrics.map((metric) => metric.value ?? 0),
                   },
                 ]}
-                options={resourceChartOptions}
+                options={resourceSnapshotOptions}
                 sx={{ p: 2.5, pb: 1, height: 360 }}
               />
             </Card>
           </Grid>
 
-          <Grid size={{ xs: 12, lg: 12 }}>
+          <Grid size={{ xs: 12, lg: 8 }}>
             <Card>
-              <CardHeader title="Traffic: Avg Latency" />
+              <CardHeader title="Traffic Trend (Line + Area)" subheader="Requests/s and average latency" />
               <Chart
                 type="line"
                 series={[
-                  {
-                    name: 'Latency',
-                    data: trend.map((point) => point.avgLatencyMs),
-                  },
+                  { name: 'Requests/s', type: 'line', data: trend.map((point) => point.requestsPerSecond) },
+                  { name: 'Avg Latency', type: 'area', data: trend.map((point) => point.avgLatencyMs) },
                 ]}
-                options={trafficLatencyOptions}
-                sx={{ p: 2.5, pb: 1, height: 280 }}
+                options={trafficTrendOptions}
+                sx={{ p: 2.5, pb: 1, height: 340 }}
               />
             </Card>
           </Grid>
 
-          <Grid size={{ xs: 12, lg: 12 }}>
+          <Grid size={{ xs: 12, lg: 4 }}>
             <Card>
-              <CardHeader title="Traffic: Requests/s" />
+              <CardHeader
+                title="Traffic Quality (Pie)"
+                subheader="Latest request quality split"
+                action={
+                  <Chip
+                    size="small"
+                    color={(traffic?.errorRate5xxPct ?? 0) > 1 ? 'warning' : 'success'}
+                    label={formatPercent(traffic?.errorRate5xxPct ?? null)}
+                  />
+                }
+              />
               <Chart
-                type="line"
-                series={[
-                  {
-                    name: 'RPS',
-                    data: trend.map((point) => point.requestsPerSecond),
-                  },
-                ]}
-                options={trafficRpsOptions}
-                sx={{ p: 2.5, pb: 1, height: 280 }}
+                type="pie"
+                series={[successRateNow ?? 0, traffic?.errorRate5xxPct ?? 0]}
+                options={trafficQualityOptions}
+                sx={{ p: 2.5, pb: 1, height: 340 }}
               />
             </Card>
           </Grid>
 
-          <Grid size={{ xs: 12, lg: 12 }}>
+          <Grid size={{ xs: 12, lg: 8 }}>
             <Card>
-              <CardHeader title="Traffic: 5xx Error Rate" />
+              <CardHeader
+                title="Service Reliability (Line + Area)"
+                subheader="Service state and 5xx error rate over time"
+                action={<Chip label={status?.service ?? 'UNKNOWN'} size="small" color={status?.service === 'UP' ? 'success' : 'warning'} />}
+              />
               <Chart
                 type="line"
                 series={[
-                  {
-                    name: '5xx Error',
-                    data: trend.map((point) => point.errorRate5xxPct),
-                  },
+                  { name: 'Service', type: 'line', data: trend.map((point) => point.serviceState) },
+                  { name: '5xx Error Rate', type: 'area', data: trend.map((point) => point.errorRate5xxPct) },
                 ]}
-                options={trafficErrorOptions}
-                sx={{ p: 2.5, pb: 1, height: 280 }}
+                options={serviceReliabilityOptions}
+                sx={{ p: 2.5, pb: 1, height: 320 }}
               />
+            </Card>
+          </Grid>
+
+          <Grid size={{ xs: 12, lg: 4 }}>
+            <Card sx={{ height: 1 }}>
+              <CardHeader title="Heap Split (Pie)" subheader="Latest heap used/free in MB" />
+              <Chart
+                type="pie"
+                series={[heapUsedMb ?? 0, heapFreeMb ?? 0]}
+                options={heapSplitOptions}
+                sx={{ p: 2.5, pb: 1, height: 320 }}
+              />
+              <CardContent>
+                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                  Updated: {new Date(overview.generatedAt).toLocaleString()}
+                </Typography>
+              </CardContent>
             </Card>
           </Grid>
         </Grid>

@@ -54,3 +54,20 @@ management:
 monitoring:
   prometheus:
     base-url: ${PROMETHEUS_BASE_URL:http://localhost:9090}
+
+debezium:
+  enabled: true
+  name: bookstore-connector
+  database:
+    hostname: host.docker.internal
+    port: 3306
+    name: bookstore
+    username: bookstore
+    password: 1234
+    server-id: 1 # Slave Id (다른 Slave와 겹치지 않아야 함)
+  table:
+    include-list: bookstore.order_log_outbox
+  offset:
+    storage-file: /tmp/debezium-offsets.dat # offset 저장 파일 경로
+  history:
+    file: /tmp/debezium-history.dat # history 저장 파일 경로

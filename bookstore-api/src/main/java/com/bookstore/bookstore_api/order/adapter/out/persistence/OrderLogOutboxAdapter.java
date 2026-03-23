@@ -63,4 +63,9 @@ public class OrderLogOutboxAdapter implements OrderLogOutboxRepository {
         orderLogOutboxMapper.update(entity);
         return orderLogOutboxConverter.toModel(entity);
     }
+
+    @Override
+    public int resetFailedToPending(Long id) {
+        return orderLogOutboxMapper.resetFailedToPending(id);
+    }
 }
