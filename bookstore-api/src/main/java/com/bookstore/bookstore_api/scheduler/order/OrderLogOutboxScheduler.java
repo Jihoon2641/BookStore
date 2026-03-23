@@ -2,7 +2,6 @@ package com.bookstore.bookstore_api.scheduler.order;
 
 import java.util.List;
 
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 

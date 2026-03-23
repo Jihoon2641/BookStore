@@ -56,6 +56,7 @@ monitoring:
     base-url: ${PROMETHEUS_BASE_URL:http://localhost:9090}
 
 debezium:
+  enabled: true
   name: bookstore-connector
   database:
     hostname: host.docker.internal

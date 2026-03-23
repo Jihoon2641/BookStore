@@ -2,6 +2,7 @@ package com.bookstore.bookstore_api.config;
 
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
@@ -25,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
+@ConditionalOnProperty(prefix = "debezium", name = "enabled", havingValue = "true")
 @RequiredArgsConstructor
 public class DebeziumConfig implements ApplicationRunner {
 
