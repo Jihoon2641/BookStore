@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -15,21 +15,14 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { fNumber } from 'src/utils/format-number';
 
 import { DashboardContent } from 'src/layouts/dashboard';
-import { getMonitoringMetric } from 'src/services/admin-monitoring';
+import {
+  type MonitoringDbSnapshot,
+  subscribeMonitoringDbStream,
+} from 'src/services/admin-monitoring';
 
 import { Chart, useChart } from 'src/components/chart';
 
-type MetricDetail = Awaited<ReturnType<typeof getMonitoringMetric>>;
-
-type DbSnapshot = {
-  active: number | null;
-  idle: number | null;
-  pending: number | null;
-  max: number | null;
-  timeoutCount: number | null;
-  avgUsageMs: number | null;
-  generatedAt: string;
-};
+type DbSnapshot = MonitoringDbSnapshot;
 
 type DbTrendPoint = {
   label: string;
@@ -37,7 +30,6 @@ type DbTrendPoint = {
   timeoutCount: number | null;
 };
 
-const POLLING_INTERVAL_MS = 15000;
 const MAX_POINTS = 30;
 
 function toTimeLabel(isoDateTime: string): string {
@@ -49,38 +41,6 @@ function toTimeLabel(isoDateTime: string): string {
   });
 }
 
-function pickMeasurementValue(metric: MetricDetail | null, statistics: string[]): number | null {
-  if (!metric) {
-    return null;
-  }
-
-  for (const statistic of statistics) {
-    const measurement = metric.measurements.find((item) => item.statistic === statistic);
-    if (measurement && measurement.value !== null) {
-      return measurement.value;
-    }
-  }
-
-  return metric.measurements.find((item) => item.value !== null)?.value ?? null;
-}
-
-function toMilliseconds(value: number | null, baseUnit: string | null): number | null {
-  if (value === null) {
-    return null;
-  }
-
-  if (!baseUnit) {
-    return value;
-  }
-
-  const normalized = baseUnit.toLowerCase();
-  if (normalized.includes('second')) {
-    return value * 1000;
-  }
-
-  return value;
-}
-
 function toDisplay(value: number | null, suffix = ''): string {
   if (value === null) {
     return 'No data';
@@ -89,84 +49,48 @@ function toDisplay(value: number | null, suffix = ''): string {
   return `${fNumber(value, { maximumFractionDigits: 4 })}${suffix}`;
 }
 
-async function safeGetMetric(metricName: string): Promise<MetricDetail | null> {
-  try {
-    return await getMonitoringMetric(metricName);
-  } catch {
-    return null;
-  }
-}
-
 export function SystemDbView() {
   const [snapshot, setSnapshot] = useState<DbSnapshot | null>(null);
   const [trend, setTrend] = useState<DbTrendPoint[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-
-  const fetchMetrics = useCallback(async () => {
-    setIsRefreshing(true);
-
-    try {
-      const [activeMetric, idleMetric, pendingMetric, maxMetric, timeoutMetric, usageMetric] =
-        await Promise.all([
-          safeGetMetric('hikaricp.connections.active'),
-          safeGetMetric('hikaricp.connections.idle'),
-          safeGetMetric('hikaricp.connections.pending'),
-          safeGetMetric('hikaricp.connections.max'),
-          safeGetMetric('hikaricp.connections.timeout'),
-          safeGetMetric('hikaricp.connections.usage'),
-        ]);
-
-      const generatedAt = new Date().toISOString();
-      const active = pickMeasurementValue(activeMetric, ['VALUE']);
-      const idle = pickMeasurementValue(idleMetric, ['VALUE']);
-      const pending = pickMeasurementValue(pendingMetric, ['VALUE']);
-      const max = pickMeasurementValue(maxMetric, ['VALUE']);
-      const timeoutCount = pickMeasurementValue(timeoutMetric, ['COUNT', 'VALUE']);
-      const usageRaw = pickMeasurementValue(usageMetric, ['MEAN', 'MAX', 'TOTAL_TIME', 'VALUE']);
-      const avgUsageMs = toMilliseconds(usageRaw, usageMetric?.baseUnit ?? null);
-
-      const nextSnapshot: DbSnapshot = {
-        active,
-        idle,
-        pending,
-        max,
-        timeoutCount,
-        avgUsageMs,
-        generatedAt,
-      };
-
-      setSnapshot(nextSnapshot);
-      setErrorMessage('');
-      setTrend((previous) => {
-        const nextPoint: DbTrendPoint = {
-          label: toTimeLabel(generatedAt),
-          avgUsageMs,
-          timeoutCount,
-        };
-
-        return [...previous, nextPoint].slice(-MAX_POINTS);
-      });
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'DB 메트릭 조회 중 오류가 발생했습니다.');
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  }, []);
+  const [streamVersion, setStreamVersion] = useState(0);
 
   useEffect(() => {
-    void fetchMetrics();
+    const unsubscribe = subscribeMonitoringDbStream({
+      onOpen: () => {
+        setErrorMessage('');
+        setIsRefreshing(false);
+      },
+      onDb: (nextSnapshot) => {
+        setSnapshot(nextSnapshot);
+        setErrorMessage('');
+        setTrend((previous) => {
+          const nextPoint: DbTrendPoint = {
+            label: toTimeLabel(nextSnapshot.generatedAt),
+            avgUsageMs: nextSnapshot.avgUsageMs,
+            timeoutCount: nextSnapshot.timeoutCount,
+          };
 
-    const intervalId = window.setInterval(() => {
-      void fetchMetrics();
-    }, POLLING_INTERVAL_MS);
+          return [...previous, nextPoint].slice(-MAX_POINTS);
+        });
+        setIsLoading(false);
+        setIsRefreshing(false);
+      },
+      onError: (message) => {
+        setErrorMessage(message);
+        setIsRefreshing(false);
+      },
+      onReconnect: () => {
+        setIsRefreshing(true);
+      },
+    });
 
     return () => {
-      window.clearInterval(intervalId);
+      unsubscribe();
     };
-  }, [fetchMetrics]);
+  }, [streamVersion]);
 
   const categories = trend.map((point) => point.label);
   const labelStep = Math.max(1, Math.ceil(categories.length / 8));
@@ -228,7 +152,15 @@ export function SystemDbView() {
           </Typography>
         </Box>
 
-        <Button variant="contained" color="inherit" onClick={() => void fetchMetrics()} disabled={isRefreshing}>
+        <Button
+          variant="contained"
+          color="inherit"
+          onClick={() => {
+            setIsRefreshing(true);
+            setStreamVersion((previous) => previous + 1);
+          }}
+          disabled={isRefreshing}
+        >
           {isRefreshing ? 'Refreshing...' : 'Refresh'}
         </Button>
       </Stack>

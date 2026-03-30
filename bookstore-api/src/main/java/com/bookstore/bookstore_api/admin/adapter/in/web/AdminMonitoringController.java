@@ -2,18 +2,22 @@ package com.bookstore.bookstore_api.admin.adapter.in.web;
 
 import java.util.List;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.bookstore.bookstore_api.admin.adapter.in.dto.response.MonitoringHealthResponse;
 import com.bookstore.bookstore_api.admin.adapter.in.dto.response.MonitoringMetricNamesResponse;
 import com.bookstore.bookstore_api.admin.adapter.in.dto.response.MonitoringMetricResponse;
 import com.bookstore.bookstore_api.admin.adapter.in.dto.response.MonitoringOverviewResponse;
+import com.bookstore.bookstore_api.admin.application.service.MonitoringSseService;
 import com.bookstore.bookstore_api.admin.application.port.in.MonitoringUseCase;
 import com.bookstore.bookstore_api.util.response.ApiResponse;
 
@@ -28,6 +32,7 @@ import lombok.RequiredArgsConstructor;
 public class AdminMonitoringController {
 
     private final MonitoringUseCase monitoringUseCase;
+    private final MonitoringSseService monitoringSseService;
 
     @Operation(summary = "모니터링 요약", description = "React 대시보드 카드용 요약 데이터(앱 + 호스트 + 디스크/네트워크)")
     @GetMapping("/overview")
@@ -57,5 +62,37 @@ public class AdminMonitoringController {
             @RequestParam(name = "tag", required = false) List<String> tags) {
         MonitoringMetricResponse response = monitoringUseCase.getMetric(metricName, tags);
         return ResponseEntity.ok(ApiResponse.success(response, "메트릭 상세 조회 성공", HttpStatus.OK));
+    }
+
+    @Operation(summary = "모니터링 실시간 스트림", description = "SSE 기반 모니터링 요약 푸시 스트림")
+    @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public ResponseEntity<SseEmitter> streamOverview() {
+        return buildSseResponse(monitoringSseService.subscribeOverview());
+    }
+
+    @Operation(summary = "모니터링 요약 스트림", description = "SSE 기반 모니터링 요약 푸시 스트림")
+    @GetMapping(value = "/stream/overview", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public ResponseEntity<SseEmitter> streamOverviewDetailed() {
+        return buildSseResponse(monitoringSseService.subscribeOverview());
+    }
+
+    @Operation(summary = "JVM 스트림", description = "SSE 기반 JVM 스냅샷 푸시 스트림")
+    @GetMapping(value = "/stream/jvm", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public ResponseEntity<SseEmitter> streamJvm() {
+        return buildSseResponse(monitoringSseService.subscribeJvm());
+    }
+
+    @Operation(summary = "DB 스트림", description = "SSE 기반 DB 스냅샷 푸시 스트림")
+    @GetMapping(value = "/stream/db", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public ResponseEntity<SseEmitter> streamDb() {
+        return buildSseResponse(monitoringSseService.subscribeDb());
+    }
+
+    private ResponseEntity<SseEmitter> buildSseResponse(SseEmitter emitter) {
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CACHE_CONTROL, "no-cache, no-transform")
+                .header(HttpHeaders.CONNECTION, "keep-alive")
+                .header("X-Accel-Buffering", "no")
+                .body(emitter);
     }
 }

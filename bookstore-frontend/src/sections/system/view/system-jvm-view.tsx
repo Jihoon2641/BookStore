@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -15,72 +15,14 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { fNumber } from 'src/utils/format-number';
 
 import { DashboardContent } from 'src/layouts/dashboard';
-import { getMonitoringMetric } from 'src/services/admin-monitoring';
+import {
+  type MonitoringJvmSnapshot,
+  subscribeMonitoringJvmStream,
+} from 'src/services/admin-monitoring';
 
 import { Chart, useChart } from 'src/components/chart';
 
-type MetricDetail = Awaited<ReturnType<typeof getMonitoringMetric>>;
-
-type JvmSnapshot = {
-  heapUsedMb: number | null;
-  heapMaxMb: number | null;
-  liveThreads: number | null;
-  daemonThreads: number | null;
-  loadedClasses: number | null;
-  gcPauseMs: number | null;
-  generatedAt: string;
-};
-
-const POLLING_INTERVAL_MS = 15000;
-
-function pickMeasurementValue(metric: MetricDetail | null, statistics: string[]): number | null {
-  if (!metric) {
-    return null;
-  }
-
-  for (const statistic of statistics) {
-    const measurement = metric.measurements.find((item) => item.statistic === statistic);
-    if (measurement && measurement.value !== null) {
-      return measurement.value;
-    }
-  }
-
-  return metric.measurements.find((item) => item.value !== null)?.value ?? null;
-}
-
-function toMegabytes(value: number | null, baseUnit: string | null): number | null {
-  if (value === null) {
-    return null;
-  }
-
-  if (!baseUnit) {
-    return value;
-  }
-
-  const normalized = baseUnit.toLowerCase();
-  if (normalized.includes('byte')) {
-    return value / (1024 * 1024);
-  }
-
-  return value;
-}
-
-function toMilliseconds(value: number | null, baseUnit: string | null): number | null {
-  if (value === null) {
-    return null;
-  }
-
-  if (!baseUnit) {
-    return value;
-  }
-
-  const normalized = baseUnit.toLowerCase();
-  if (normalized.includes('second')) {
-    return value * 1000;
-  }
-
-  return value;
-}
+type JvmSnapshot = MonitoringJvmSnapshot;
 
 function toDisplay(value: number | null, suffix = ''): string {
   if (value === null) {
@@ -90,83 +32,38 @@ function toDisplay(value: number | null, suffix = ''): string {
   return `${fNumber(value, { maximumFractionDigits: 4 })}${suffix}`;
 }
 
-async function safeGetMetric(metricName: string, tags: string[] = []): Promise<MetricDetail | null> {
-  try {
-    return await getMonitoringMetric(metricName, tags);
-  } catch {
-    return null;
-  }
-}
-
 export function SystemJvmView() {
   const [snapshot, setSnapshot] = useState<JvmSnapshot | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-
-  const fetchMetrics = useCallback(async () => {
-    setIsRefreshing(true);
-
-    try {
-      const [
-        heapUsedMetric,
-        heapMaxMetric,
-        liveThreadsMetric,
-        daemonThreadsMetric,
-        loadedClassesMetric,
-        gcPauseMetric,
-      ] = await Promise.all([
-        safeGetMetric('jvm.memory.used', ['area:heap']),
-        safeGetMetric('jvm.memory.max', ['area:heap']),
-        safeGetMetric('jvm.threads.live'),
-        safeGetMetric('jvm.threads.daemon'),
-        safeGetMetric('jvm.classes.loaded'),
-        safeGetMetric('jvm.gc.pause'),
-      ]);
-
-      const generatedAt = new Date().toISOString();
-      const heapUsedRaw = pickMeasurementValue(heapUsedMetric, ['VALUE']);
-      const heapMaxRaw = pickMeasurementValue(heapMaxMetric, ['VALUE']);
-      const liveThreads = pickMeasurementValue(liveThreadsMetric, ['VALUE']);
-      const daemonThreads = pickMeasurementValue(daemonThreadsMetric, ['VALUE']);
-      const loadedClasses = pickMeasurementValue(loadedClassesMetric, ['VALUE']);
-      const gcPauseRaw = pickMeasurementValue(gcPauseMetric, ['MEAN', 'MAX', 'VALUE']);
-
-      const heapUsedMb = toMegabytes(heapUsedRaw, heapUsedMetric?.baseUnit ?? null);
-      const heapMaxMb = toMegabytes(heapMaxRaw, heapMaxMetric?.baseUnit ?? null);
-      const gcPauseMs = toMilliseconds(gcPauseRaw, gcPauseMetric?.baseUnit ?? null);
-
-      const nextSnapshot: JvmSnapshot = {
-        heapUsedMb,
-        heapMaxMb,
-        liveThreads,
-        daemonThreads,
-        loadedClasses,
-        gcPauseMs,
-        generatedAt,
-      };
-
-      setSnapshot(nextSnapshot);
-      setErrorMessage('');
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'JVM 메트릭 조회 중 오류가 발생했습니다.');
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  }, []);
+  const [streamVersion, setStreamVersion] = useState(0);
 
   useEffect(() => {
-    void fetchMetrics();
-
-    const intervalId = window.setInterval(() => {
-      void fetchMetrics();
-    }, POLLING_INTERVAL_MS);
+    const unsubscribe = subscribeMonitoringJvmStream({
+      onOpen: () => {
+        setErrorMessage('');
+        setIsRefreshing(false);
+      },
+      onJvm: (nextSnapshot) => {
+        setSnapshot(nextSnapshot);
+        setErrorMessage('');
+        setIsLoading(false);
+        setIsRefreshing(false);
+      },
+      onError: (message) => {
+        setErrorMessage(message);
+        setIsRefreshing(false);
+      },
+      onReconnect: () => {
+        setIsRefreshing(true);
+      },
+    });
 
     return () => {
-      window.clearInterval(intervalId);
+      unsubscribe();
     };
-  }, [fetchMetrics]);
+  }, [streamVersion]);
 
   const jvmBarOptions = useChart({
     xaxis: {
@@ -250,7 +147,15 @@ export function SystemJvmView() {
           </Typography>
         </Box>
 
-        <Button variant="contained" color="inherit" onClick={() => void fetchMetrics()} disabled={isRefreshing}>
+        <Button
+          variant="contained"
+          color="inherit"
+          onClick={() => {
+            setIsRefreshing(true);
+            setStreamVersion((previous) => previous + 1);
+          }}
+          disabled={isRefreshing}
+        >
           {isRefreshing ? 'Refreshing...' : 'Refresh'}
         </Button>
       </Stack>

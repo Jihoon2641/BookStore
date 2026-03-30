@@ -1,5 +1,7 @@
 package com.bookstore.bookstore_api.config;
 
+import jakarta.servlet.DispatcherType;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -54,6 +56,8 @@ public class SecurityConfig {
                                 .sessionManagement(session -> session
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                                 .authorizeHttpRequests(authorize -> authorize
+                                                // SSE/Streaming 응답의 ASYNC 재디스패치에서 중복 인가 실패를 방지한다.
+                                                .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
                                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                                                 .requestMatchers("/actuator/health/**", "/actuator/info",
                                                                 "/actuator/prometheus",

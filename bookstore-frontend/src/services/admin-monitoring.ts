@@ -63,6 +63,59 @@ export type MonitoringMetric = {
   }>;
 };
 
+export type MonitoringJvmSnapshot = {
+  generatedAt: string;
+  heapUsedMb: number | null;
+  heapMaxMb: number | null;
+  liveThreads: number | null;
+  daemonThreads: number | null;
+  loadedClasses: number | null;
+  gcPauseMs: number | null;
+};
+
+export type MonitoringDbSnapshot = {
+  generatedAt: string;
+  active: number | null;
+  idle: number | null;
+  pending: number | null;
+  max: number | null;
+  timeoutCount: number | null;
+  avgUsageMs: number | null;
+};
+
+type MonitoringStreamEvent = {
+  event: string;
+  data: string;
+};
+
+type MonitoringOverviewStreamOptions = {
+  onOverview: (overview: MonitoringOverview) => void;
+  onError?: (message: string) => void;
+  onOpen?: () => void;
+  onReconnect?: () => void;
+};
+
+type MonitoringJvmStreamOptions = {
+  onJvm: (snapshot: MonitoringJvmSnapshot) => void;
+  onError?: (message: string) => void;
+  onOpen?: () => void;
+  onReconnect?: () => void;
+};
+
+type MonitoringDbStreamOptions = {
+  onDb: (snapshot: MonitoringDbSnapshot) => void;
+  onError?: (message: string) => void;
+  onOpen?: () => void;
+  onReconnect?: () => void;
+};
+
+type MonitoringStreamOptions<T> = {
+  onData: (payload: T) => void;
+  onError?: (message: string) => void;
+  onOpen?: () => void;
+  onReconnect?: () => void;
+};
+
 class ApiError extends Error {
   status: number;
 
@@ -154,4 +207,217 @@ export async function getMonitoringMetric(
   const path = `/api/v1/admin/monitoring/metrics/${encodeURIComponent(metricName)}${queryString ? `?${queryString}` : ''}`;
 
   return requestGet<MonitoringMetric>(path);
+}
+
+const STREAM_RETRY_DELAY_MS = 3000;
+
+function parseStreamEvent(rawEventBlock: string): MonitoringStreamEvent | null {
+  const normalized = rawEventBlock.replace(/\r/g, '');
+  if (!normalized.trim()) {
+    return null;
+  }
+
+  let eventName = 'message';
+  const dataLines: string[] = [];
+  const lines = normalized.split('\n');
+
+  lines.forEach((line) => {
+    if (line.startsWith(':')) {
+      return;
+    }
+
+    if (line.startsWith('event:')) {
+      eventName = line.slice(6).trim();
+      return;
+    }
+
+    if (line.startsWith('data:')) {
+      dataLines.push(line.slice(5).trimStart());
+    }
+  });
+
+  if (dataLines.length === 0) {
+    return null;
+  }
+
+  return {
+    event: eventName,
+    data: dataLines.join('\n'),
+  };
+}
+
+async function consumeEventStream(
+  stream: ReadableStream<Uint8Array>,
+  signal: AbortSignal,
+  onEvent: (event: MonitoringStreamEvent) => void
+): Promise<void> {
+  const reader = stream.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  try {
+    while (!signal.aborted) {
+      const { done, value } = await reader.read();
+      if (done) {
+        break;
+      }
+
+      buffer += decoder.decode(value, { stream: true });
+      buffer = buffer.replace(/\r\n/g, '\n');
+
+      let separatorIndex = buffer.indexOf('\n\n');
+      while (separatorIndex >= 0) {
+        const rawEvent = buffer.slice(0, separatorIndex);
+        buffer = buffer.slice(separatorIndex + 2);
+
+        const parsed = parseStreamEvent(rawEvent);
+        if (parsed) {
+          onEvent(parsed);
+        }
+
+        separatorIndex = buffer.indexOf('\n\n');
+      }
+    }
+  } finally {
+    reader.releaseLock();
+  }
+}
+
+function resolveStreamErrorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    return error.message;
+  }
+
+  if (error instanceof Error && error.message.trim().length > 0) {
+    return error.message;
+  }
+
+  return '실시간 모니터링 스트림 연결에 실패했습니다.';
+}
+
+function subscribeMonitoringStream<T>(
+  path: string,
+  eventName: string,
+  options: MonitoringStreamOptions<T>
+): () => void {
+  const accessToken = getAdminAccessToken();
+  if (!accessToken) {
+    options.onError?.('관리자 로그인 후 이용해 주세요.');
+    return () => {};
+  }
+
+  const controller = new AbortController();
+  let closed = false;
+  let reconnectTimerId: number | null = null;
+
+  const clearReconnectTimer = () => {
+    if (reconnectTimerId !== null) {
+      window.clearTimeout(reconnectTimerId);
+      reconnectTimerId = null;
+    }
+  };
+
+  const scheduleReconnect = () => {
+    if (closed || controller.signal.aborted) {
+      return;
+    }
+
+    clearReconnectTimer();
+    options.onReconnect?.();
+    reconnectTimerId = window.setTimeout(() => {
+      void connect();
+    }, STREAM_RETRY_DELAY_MS);
+  };
+
+  const connect = async () => {
+    if (closed || controller.signal.aborted) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}${path}`, {
+        method: 'GET',
+        headers: {
+          ...getAdminAuthorizationHeader(),
+          Accept: 'text/event-stream',
+          'Cache-Control': 'no-cache',
+        },
+        signal: controller.signal,
+      });
+
+      if (response.status === 401 || response.status === 403) {
+        options.onError?.('스트림 인증이 만료되었습니다. 다시 로그인해 주세요.');
+        return;
+      }
+
+      if (!response.ok) {
+        throw new ApiError(`스트림 연결에 실패했습니다. (HTTP ${response.status})`, response.status);
+      }
+
+      if (!response.body) {
+        throw new ApiError('스트림 응답 본문이 비어 있습니다.', response.status);
+      }
+
+      options.onOpen?.();
+
+      await consumeEventStream(response.body, controller.signal, (event) => {
+        if (event.event !== eventName) {
+          return;
+        }
+
+        try {
+          const payload = JSON.parse(event.data) as T;
+          options.onData(payload);
+        } catch {
+          options.onError?.('실시간 모니터링 데이터 파싱에 실패했습니다.');
+        }
+      });
+
+      if (!closed && !controller.signal.aborted) {
+        scheduleReconnect();
+      }
+    } catch (error) {
+      if (closed || controller.signal.aborted) {
+        return;
+      }
+
+      options.onError?.(resolveStreamErrorMessage(error));
+      scheduleReconnect();
+    }
+  };
+
+  void connect();
+
+  return () => {
+    closed = true;
+    clearReconnectTimer();
+    controller.abort();
+  };
+}
+
+export function subscribeMonitoringOverviewStream(options: MonitoringOverviewStreamOptions): () => void {
+  return subscribeMonitoringStream<MonitoringOverview>('/api/v1/admin/monitoring/stream/overview', 'overview', {
+    onData: options.onOverview,
+    onError: options.onError,
+    onOpen: options.onOpen,
+    onReconnect: options.onReconnect,
+  });
+}
+
+export function subscribeMonitoringJvmStream(options: MonitoringJvmStreamOptions): () => void {
+  return subscribeMonitoringStream<MonitoringJvmSnapshot>('/api/v1/admin/monitoring/stream/jvm', 'jvm', {
+    onData: options.onJvm,
+    onError: options.onError,
+    onOpen: options.onOpen,
+    onReconnect: options.onReconnect,
+  });
+}
+
+export function subscribeMonitoringDbStream(options: MonitoringDbStreamOptions): () => void {
+  return subscribeMonitoringStream<MonitoringDbSnapshot>('/api/v1/admin/monitoring/stream/db', 'db', {
+    onData: options.onDb,
+    onError: options.onError,
+    onOpen: options.onOpen,
+    onReconnect: options.onReconnect,
+  });
 }

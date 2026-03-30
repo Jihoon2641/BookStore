@@ -1,7 +1,6 @@
 package com.bookstore.bookstore_api.admin.adapter.out;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
+
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -30,9 +29,8 @@ public class PrometheusQueryAdapter {
 
     public Optional<Double> queryScalar(String promql) {
         try {
-            String encodedPromql = URLEncoder.encode(promql, StandardCharsets.UTF_8);
             String responseBody = webClient.get()
-                    .uri("/api/v1/query?query=" + encodedPromql)
+                    .uri("/api/v1/query?query={query}", promql)
                     .retrieve()
                     .bodyToMono(String.class)
                     .block();
