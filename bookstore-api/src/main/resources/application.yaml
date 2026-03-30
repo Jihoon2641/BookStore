@@ -21,6 +21,11 @@ spring:
         use_sql_comments: true
     open-in-view: false
 
+  security:
+    filter:
+      observation:
+        enabled: false
+
 mybatis:
   mapper-locations: classpath:mapper/*.xml
   type-aliases-package: com.bookstore.bookstore_api.user.domain.entity,com.bookstore.bookstore_api.order.domain.entity,com.bookstore.bookstore_api.product.domain.entity,com.bookstore.bookstore_api.log.domain.entity,com.bookstore.bookstore_api.admin.domain.entity

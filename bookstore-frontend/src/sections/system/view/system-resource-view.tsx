@@ -18,11 +18,11 @@ import { RouterLink } from 'src/routes/components';
 import { fNumber } from 'src/utils/format-number';
 
 import { DashboardContent } from 'src/layouts/dashboard';
-import { getMonitoringOverview } from 'src/services/admin-monitoring';
+import { type MonitoringOverview, subscribeMonitoringOverviewStream } from 'src/services/admin-monitoring';
 
 import { Chart, useChart } from 'src/components/chart';
 
-type MonitoringOverviewData = Awaited<ReturnType<typeof getMonitoringOverview>>;
+type MonitoringOverviewData = MonitoringOverview;
 type MonitoringResources = NonNullable<MonitoringOverviewData['resources']>;
 
 type TrendPoint = {
@@ -50,7 +50,6 @@ type SummaryItem = {
   tone: 'success' | 'warning' | 'error' | 'info';
 };
 
-const POLLING_INTERVAL_MS = 15000;
 const MAX_POINTS = 30;
 
 function toServiceState(service: string | undefined): number {
@@ -122,51 +121,55 @@ export function SystemResourceView() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [streamVersion, setStreamVersion] = useState(0);
 
-  const fetchOverview = useCallback(async () => {
-    setIsRefreshing(true);
+  const applyOverview = useCallback((nextOverview: MonitoringOverviewData) => {
+    const dbPoolUsagePct = buildDbPoolUsage(nextOverview.resources);
 
-    try {
-      const nextOverview = await getMonitoringOverview();
-      const dbPoolUsagePct = buildDbPoolUsage(nextOverview.resources);
+    setOverview(nextOverview);
+    setErrorMessage('');
+    setTrend((previous) => {
+      const nextPoint: TrendPoint = {
+        label: toTimeLabel(nextOverview.generatedAt),
+        serviceState: toServiceState(nextOverview.status?.service),
+        appCpuPct: nextOverview.resources?.appCpuPct ?? null,
+        heapUsedPct: nextOverview.resources?.heapUsedPct ?? null,
+        hostCpuPct: nextOverview.resources?.hostCpuPct ?? null,
+        hostMemPct: nextOverview.resources?.hostMemPct ?? null,
+        dbPoolUsagePct,
+        requestsPerSecond: nextOverview.traffic?.requestsPerSecond ?? null,
+        errorRate5xxPct: nextOverview.traffic?.errorRate5xxPct ?? null,
+        avgLatencyMs: nextOverview.traffic?.avgLatencyMs ?? null,
+      };
 
-      setOverview(nextOverview);
-      setErrorMessage('');
-      setTrend((previous) => {
-        const nextPoint: TrendPoint = {
-          label: toTimeLabel(nextOverview.generatedAt),
-          serviceState: toServiceState(nextOverview.status?.service),
-          appCpuPct: nextOverview.resources?.appCpuPct ?? null,
-          heapUsedPct: nextOverview.resources?.heapUsedPct ?? null,
-          hostCpuPct: nextOverview.resources?.hostCpuPct ?? null,
-          hostMemPct: nextOverview.resources?.hostMemPct ?? null,
-          dbPoolUsagePct,
-          requestsPerSecond: nextOverview.traffic?.requestsPerSecond ?? null,
-          errorRate5xxPct: nextOverview.traffic?.errorRate5xxPct ?? null,
-          avgLatencyMs: nextOverview.traffic?.avgLatencyMs ?? null,
-        };
-
-        return [...previous, nextPoint].slice(-MAX_POINTS);
-      });
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : '시스템 리소스 조회 중 오류가 발생했습니다.');
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
+      return [...previous, nextPoint].slice(-MAX_POINTS);
+    });
+    setIsLoading(false);
+    setIsRefreshing(false);
   }, []);
 
   useEffect(() => {
-    void fetchOverview();
-
-    const intervalId = window.setInterval(() => {
-      void fetchOverview();
-    }, POLLING_INTERVAL_MS);
+    const unsubscribe = subscribeMonitoringOverviewStream({
+      onOpen: () => {
+        setErrorMessage('');
+        setIsRefreshing(false);
+      },
+      onOverview: (nextOverview) => {
+        applyOverview(nextOverview);
+      },
+      onError: (message) => {
+        setErrorMessage(message);
+        setIsRefreshing(false);
+      },
+      onReconnect: () => {
+        setIsRefreshing(true);
+      },
+    });
 
     return () => {
-      window.clearInterval(intervalId);
+      unsubscribe();
     };
-  }, [fetchOverview]);
+  }, [applyOverview, streamVersion]);
 
   const resources = overview?.resources ?? null;
   const traffic = overview?.traffic ?? null;
@@ -363,7 +366,15 @@ export function SystemResourceView() {
           </Typography>
         </Box>
 
-        <Button variant="contained" color="inherit" onClick={() => void fetchOverview()} disabled={isRefreshing}>
+        <Button
+          variant="contained"
+          color="inherit"
+          onClick={() => {
+            setIsRefreshing(true);
+            setStreamVersion((previous) => previous + 1);
+          }}
+          disabled={isRefreshing}
+        >
           {isRefreshing ? 'Refreshing...' : 'Refresh'}
         </Button>
       </Stack>
