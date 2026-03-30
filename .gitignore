@@ -59,3 +59,5 @@ __pycache__/
 *.pyzwzw
 
 nl2sql-models/
+
+bookstore-api/logs/
