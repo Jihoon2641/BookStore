@@ -128,13 +128,13 @@ services:
     env_file:
       - ./bookstore-nl2sql/.env
     environment:
-      - MODEL_PATH=/app/models/multilingual-e5-large
+      - MODEL_PATH=/app/nl2sql-models/multilingual-e5-large
       - DB_HOST=bookstore-db
       - DB_PORT=3306
       - CHROMA_HOST=chromadb
       - CHROMA_PORT=8000
     volumes:
-      - ./models:/app/models
+      - ./bookstore-nl2sql/nl2sql-models:/app/nl2sql-models:ro
     depends_on:
       bookstore-db:
         condition: service_healthy

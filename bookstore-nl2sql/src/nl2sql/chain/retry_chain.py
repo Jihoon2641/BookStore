@@ -57,8 +57,8 @@ def create_retry_chain(
             
             validated_output = validation_chain.invoke({
                 **output,
-                'sql': new_output.sql,
-                'explanation': getattr(new_output, 'explanation', ''),
+                'sql': new_output.get('sql', output.get('sql', '')),
+                'explanation': new_output.get('explanation', output.get('explanation', '')),
                 'retry_count': retry_count + 1
             })
             

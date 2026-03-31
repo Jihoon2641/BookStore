@@ -23,6 +23,19 @@ class FewShotJsonStore:
         num = int(last_id.split("_")[1]) + 1
         return f"example_{num:03d}"
 
+    def has_query(self, query: str) -> bool:
+        target = (query or "").strip().lower()
+        if not target:
+            return False
+
+        data = self.load()
+        examples = data.get("examples", [])
+        for example in examples:
+            existing_query = str(example.get("query", "")).strip().lower()
+            if existing_query == target:
+                return True
+        return False
+
     def append_example(
         self,
         example_id: str,

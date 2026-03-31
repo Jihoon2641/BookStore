@@ -6,6 +6,7 @@
 - 배치 처리
 """
 
+import os
 from pathlib import Path
 
 import numpy as np
@@ -25,15 +26,39 @@ class EmbeddingModel:
         if self._model is None:
             self._load_model()
 
+    @staticmethod
+    def _get_model_candidates() -> list[Path]:
+        candidates: list[Path] = []
+        model_path_from_env = os.getenv("MODEL_PATH")
+        if model_path_from_env:
+            candidates.append(Path(model_path_from_env))
+
+        candidates.extend(
+            [
+                Path("models/multilingual-e5-large"),
+                Path("nl2sql-models/multilingual-e5-large"),
+                Path("/app/models/multilingual-e5-large"),
+                Path("/app/nl2sql-models/multilingual-e5-large"),
+            ]
+        )
+
+        deduped: list[Path] = []
+        seen: set[str] = set()
+        for path in candidates:
+            key = str(path)
+            if key in seen:
+                continue
+            deduped.append(path)
+            seen.add(key)
+        return deduped
+
     def _load_model(self):
-        model_path = Path("nl2sql-models/multilingual-e5-large")
+        model_path = next((path for path in self._get_model_candidates() if path.exists()), None)
+        if model_path is None:
+            checked_paths = ", ".join(str(path) for path in self._get_model_candidates())
+            raise FileNotFoundError(f"모델을 찾을 수 없습니다. 확인한 경로: {checked_paths}")
 
-        if not model_path.exists():
-            raise FileNotFoundError(f"모델을 찾을 수 없습니다: {model_path}")
-        else:
-            self._model = SentenceTransformer(str(model_path))
-
-        self._model.save(str(model_path))
+        self._model = SentenceTransformer(str(model_path))
 
     def encode(
         self,

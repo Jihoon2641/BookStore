@@ -17,6 +17,7 @@ export const UserPage = lazy(() => import('src/pages/user'));
 export const SystemPage = lazy(() => import('src/pages/system'));
 export const SystemDbPage = lazy(() => import('src/pages/system-db'));
 export const SystemJvmPage = lazy(() => import('src/pages/system-jvm'));
+export const Nl2SqlPage = lazy(() => import('src/pages/nl2sql'));
 export const SignInPage = lazy(() => import('src/pages/sign-in'));
 export const SignUpPage = lazy(() => import('src/pages/sign-up'));
 export const ProductsPage = lazy(() => import('src/pages/products'));
@@ -57,6 +58,7 @@ export const routesSection: RouteObject[] = [
       { path: 'system', element: <SystemPage /> },
       { path: 'system/db', element: <SystemDbPage /> },
       { path: 'system/jvm', element: <SystemJvmPage /> },
+      { path: 'nl2sql', element: <Nl2SqlPage /> },
       { path: 'products', element: <ProductsPage /> },
     ],
   },

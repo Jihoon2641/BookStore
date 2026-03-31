@@ -3,7 +3,6 @@ from loguru import logger
 from nl2sql.common.sql_parser import extract_tables_from_sql
 from nl2sql.models.feedback import FeedbackRequest, FeedbackResponse
 
-from .duplicate_checker import DuplicateChecker
 from .few_shot_store import FewShotJsonStore
 
 
@@ -16,15 +15,6 @@ class Feedback:
 
     def __init__(self, few_shot_path: str):
         self.store = FewShotJsonStore(few_shot_path)
-        self.duplicate_checker = None
-        self._init_duplicate_checker()
-
-    def _init_duplicate_checker(self) -> None:
-        try:
-            self.duplicate_checker = DuplicateChecker()
-        except Exception as e:
-            logger.warning(f"중복 검사기 초기화 실패: {e}")
-            self.duplicate_checker = None
 
     def handle(self, request: FeedbackRequest) -> FeedbackResponse:
         if request.satisfied:
@@ -33,12 +23,11 @@ class Feedback:
 
     def _handle_positive(self, request: FeedbackRequest) -> FeedbackResponse:
         try:
-            is_duplicate, reason = self._is_duplicate(request.query)
-            if is_duplicate:
-                logger.info(f"이미 존재하는 few_shot 질문입니다 : {request.query}, reason={reason}")
+            if self.store.has_query(request.query):
+                logger.info(f"이미 존재하는 few_shot 질문입니다 : {request.query}")
                 return FeedbackResponse(
                     success=True,
-                    message=f"이미 학습된 유사 질문이 존재합니다. ({reason})",
+                    message="이미 few-shot에 존재하는 질문입니다.",
                 )
 
             example_id = self.store.generate_next_id()
@@ -74,13 +63,3 @@ class Feedback:
             success=False,
             message="불만족스러운 이유를 알려주세요.",
         )
-
-    def _is_duplicate(self, query: str) -> tuple[bool, str]:
-        if self.duplicate_checker is None:
-            return False, "no_similarity_backend"
-
-        try:
-            return self.duplicate_checker.is_duplicate(query)
-        except Exception as e:
-            logger.warning(f"유사도 중복 검사 실패: {e}")
-            return False, "similarity_check_failed"

@@ -45,6 +45,10 @@ export const navData = [
         title: 'Product',
         path: '/products',
       },
+      {
+        title: 'NL2SQL',
+        path: '/nl2sql',
+      },
     ],
   },
 ];
